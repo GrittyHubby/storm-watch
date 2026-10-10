@@ -63,10 +63,10 @@ button{font:inherit;color:inherit}
 .tbtn.on{background:var(--accent);color:#03141c;border-color:var(--accent)}
 .tbtn:focus-visible,.play:focus-visible,.chip:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
 .tl{top:10px;left:10px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;max-width:calc(100% - 20px)}
-.toolbar{flex:none;display:flex;gap:6px;padding:8px 10px;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto}
-.tb{flex:1 0 58px;min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);cursor:pointer;padding:6px 4px}
-.tb i{font-style:normal;font-size:24px;line-height:1;font-weight:800}
-.tb span{font-size:12px;font-weight:700;color:var(--mute);white-space:nowrap}
+.toolbar{flex:none;display:flex;gap:5px;padding:8px 8px;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto}
+.tb{flex:1 1 0;min-width:0;min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);cursor:pointer;padding:6px 4px}
+.tb i{font-style:normal;font-size:22px;line-height:1;font-weight:800}
+.tb span{font-size:11.5px;font-weight:700;color:var(--mute);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .tb.on{background:var(--accent);border-color:var(--accent);color:#03141c}
 .tb.on span{color:#03141c}
 .tb:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
@@ -218,8 +218,8 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
       <button class="tb" id="btnLocate" title="Use my GPS location"><i>◎</i><span>My GPS</span></button>
       <button class="tb" id="btnSetHome" title="Tap the map to set home"><i>✚</i><span>Set home</span></button>
       <button class="tb" id="btnLayers" title="Map layers"><i>◧</i><span>Layers</span></button>
-      <button class="tb" id="btnBase" title="Change basemap"><i>▦</i><span>Map style</span></button>
-      <button class="tb" id="btnFull" title="Full screen"><i>⛶</i><span>Full screen</span></button>
+      <button class="tb" id="btnBase" title="Change basemap"><i>▦</i><span>Map</span></button>
+      <button class="tb" id="btnFull" title="Full screen"><i>⛶</i><span>Expand</span></button>
       <button class="tb" id="btnPanel" title="Hide details panel"><i>⇥</i><span>Panel</span></button>
       <button class="tb zoom" id="btnZoomIn" title="Zoom in"><i>+</i><span>Zoom in</span></button>
       <button class="tb zoom" id="btnZoomOut" title="Zoom out"><i>−</i><span>Zoom out</span></button>
@@ -524,9 +524,11 @@ function drawCells(){
   const ranked = [...S.cells].sort((a, b) => a.a.dist - b.a.dist).filter(cellVisible);
   const n = S.cells.length, m = S.layers.cells;
   $("cellPill").textContent = m === "off" ? `Cells hidden (${n})` : m === "all" ? `All ${n} cells` : ranked.length ? `${ranked.length} of ${n} cells headed your way` : `No cells headed your way (${n} hidden)`;
+  const LABEL_ZOOM = 9, zoomOk = map.getZoom() >= LABEL_ZOOM;
+  const labelIds = new Set(zoomOk ? ranked.filter(c => isThreat(c.a)).sort((a, b) => a.a.eta - b.a.eta).slice(0, 2).map(c => c.id) : []);
   ranked.forEach(c => {
     const color = dbzColor(c.dbz), threat = isThreat(c.a), moving = Math.hypot(c.v[0], c.v[1]) > 2;
-    if(moving) drawPath(lyr.cells, c.now, c.v, color, threat, threat);
+    if(moving) drawPath(lyr.cells, c.now, c.v, color, threat, labelIds.has(c.id));
     const flag = c.tvs ? "TVS" : (threat && c.meso) ? "ROT" : (threat && c.posh >= 50) ? "HAIL" : "";
     const html = `<div class="cell${threat ? " threat" : " small"}" style="background:${color}">${Math.round(c.dbz)}${flag?`<span class="flag">${flag}</span>`:""}</div>`;
     const s = threat ? 42 : 26;
@@ -600,7 +602,7 @@ function drawAlerts(){
   for(const w of S.warnStorms){
     const m = S.layers ? S.layers.cells : "all";
     if(m === "off" || (m === "mine" && !isThreat(w.a))) continue;
-    drawPath(lyr.warn, w.now, w.v, "#ffffff", isThreat(w.a), isThreat(w.a));
+    drawPath(lyr.warn, w.now, w.v, "#ffffff", isThreat(w.a), isThreat(w.a) && map.getZoom() >= 9 && w === S.warnStorms.filter(x => isThreat(x.a)).sort((a, b) => a.a.eta - b.a.eta)[0]);
   }
 }
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
@@ -995,6 +997,8 @@ $("cellPill").onclick = () => { const order = ["mine","all","off"]; S.layers.cel
 document.querySelectorAll("#segCells button").forEach(b => b.onclick = () => { S.layers.cells = b.dataset.v; applyLayers(); });
 for(const [id, k] of [["lyWarn","warn"],["lyTrop","trop"],["lyRings","rings"],["lyLegend","legend"],["lyRoads","roads"]]) $(id).onchange = e => { S.layers[k] = e.target.checked; applyLayers(); };
 map.on("click", () => toggleLayers(false));
+let zoomTimer = null;
+map.on("zoomend", () => { clearTimeout(zoomTimer); zoomTimer = setTimeout(() => { drawCells(); drawAlerts(); }, 150); });
 document.addEventListener("keydown", e => { if(e.key === "Escape"){ toggleLayers(false); if(mapcol.classList.contains("fs")) setFs(false); } });
 $("layersPanel").addEventListener("click", e => e.stopPropagation());
 
@@ -1099,7 +1103,7 @@ async function setFs(on){
 }
 function syncFs(){
   const on = isFs(), b = $("btnFull");
-  b.classList.toggle("on", on); b.querySelector("span").textContent = on ? "Exit full" : "Full screen";
+  b.classList.toggle("on", on); b.querySelector("span").textContent = on ? "Exit" : "Expand";
   $("fsBanner").hidden = !on;
   setTimeout(() => map.invalidateSize(), 120);
 }
