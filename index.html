@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
-/* Layout: banner → full-bleed radar map → threat cards → alerts / forecast / river. Desktop: map left, console right. */
+/* Layout: fixed threat banner on top, five tabbed views (Radar, Forecast, Alerts, Power, Roads), bottom tab bar. Desktop radar: map left, threat list right. */
 :root{
   color-scheme:dark;
   --bg:#0a0e13; --panel:#111821; --panel2:#17212d; --line:#26364a;
@@ -20,10 +20,10 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{height:100%;margin:0}
+html,body{height:100%;margin:0;overflow:hidden}
 body{background:var(--bg);color:var(--fg);font:16px/1.45 var(--display);-webkit-font-smoothing:antialiased;padding-top:env(safe-area-inset-top,0px)}
 button{font:inherit;color:inherit}
-.app{display:flex;flex-direction:column;min-height:100%}
+.app{display:flex;flex-direction:column;height:100%;height:100dvh}
 .mapcol{display:flex;flex-direction:column;min-width:0}
 
 /* Banner */
@@ -35,22 +35,65 @@ button{font:inherit;color:inherit}
 .banner p{margin:3px 0 0;font-size:clamp(15px,3.8vw,19px);color:var(--fg);opacity:.9}
 .banner .txt{min-width:0}
 
-/* Main grid */
-.main{display:grid;grid-template-columns:1fr;flex:1}
-.mapwrap{position:relative;height:62vh;min-height:360px;background:#06090c}
+/* Views & tabs */
+.banner{flex:none;cursor:pointer}
+.views{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.page .pagein{max-width:760px;margin:0 auto;padding:16px 16px 28px;display:flex;flex-direction:column;gap:20px}
+.radarlayout{display:flex;flex-direction:column}
+.mapwrap{position:relative;height:max(320px,calc(100dvh - 330px));background:#06090c}
 #map{position:absolute;inset:0;background:#06090c}
-.console{padding:16px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.radarside{padding:16px;display:flex;flex-direction:column;gap:18px;min-width:0}
 @media (min-width:960px){
-  .app{height:100%}
-  .main{grid-template-columns:minmax(0,1fr) 440px;flex:1;min-height:0}
-  .main.collapsed{grid-template-columns:minmax(0,1fr) 0}
-  .main.collapsed .console{display:none}
+  #v-radar{overflow:hidden}
+  .radarlayout{display:grid;grid-template-columns:minmax(0,1fr) 400px;height:100%}
   .mapcol{height:100%;min-height:0}
   .mapwrap{flex:1;height:auto;min-height:0}
-  .console{overflow-y:auto;border-left:1px solid var(--line);touch-action:pan-y}
+  .radarside{overflow-y:auto;border-left:1px solid var(--line)}
 }
+.tabbar{flex:none;background:var(--panel);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;z-index:900}
+.tabin{display:flex;gap:4px;width:100%;max-width:760px}
+.tab{position:relative;flex:1 1 0;min-width:0;border:0;background:transparent;border-radius:12px;padding:8px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--mute)}
+.tab i{font-style:normal;font-size:22px;line-height:1}
+.tab span{font-size:12.5px;font-weight:800;letter-spacing:.02em}
+.tab[aria-selected="true"]{background:var(--panel2);color:var(--fg)}
+.tab[aria-selected="true"] i{color:var(--accent)}
+.tab:focus-visible{outline:3px solid var(--yellow);outline-offset:-3px}
+.badge{position:absolute;top:3px;left:calc(50% + 8px);min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--red);color:#fff;font:800 12px/20px var(--mono);text-align:center;box-shadow:0 0 0 2px var(--panel)}
+.badge.warn{background:var(--orange);color:#1b0d00}
+.badge.info{background:var(--yellow);color:#1a1400}
 
-/* Map overlays */
+/* Forecast tab */
+.now{gap:10px}
+.nowtop{display:flex;align-items:center;gap:14px}
+.nowico{font-size:56px;line-height:1}
+.nowtemp{font-size:clamp(56px,16vw,76px);font-weight:900;font-stretch:80%;line-height:.9}
+.nowdesc{font-size:20px;font-weight:700}
+.nowsub{color:var(--mute);font-size:15px}
+.nowgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.nowgrid div{background:var(--panel2);border-radius:10px;padding:8px 10px;min-width:0}
+.nowgrid small{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.nowgrid b{font-family:var(--mono);font-size:17px;font-weight:600}
+.days{gap:0;padding-block:4px}
+.day{border-bottom:1px solid var(--line)}
+.day:last-child{border-bottom:0}
+.day summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:62px 34px minmax(0,1fr) 44px;grid-template-areas:"name ico range hi" "desc desc desc pop";gap:2px 10px;align-items:center;padding:12px 0}
+.day summary::-webkit-details-marker{display:none}
+.dname{grid-area:name;font-weight:800;font-size:17px}
+.dico{grid-area:ico;font-size:26px;text-align:center}
+.drange{grid-area:range;display:flex;align-items:center;gap:8px;font:600 15px var(--mono);color:var(--mute)}
+.dbar{position:relative;flex:1;height:8px;border-radius:4px;background:var(--panel2);min-width:40px}
+.dbar i{position:absolute;top:0;bottom:0;border-radius:4px;background:linear-gradient(90deg,#4fa3ff,#ffd43b,#ff7a3b)}
+.dhi{grid-area:hi;font:700 17px var(--mono);text-align:right}
+.ddesc{grid-area:desc;color:var(--mute);font-size:14px;min-width:0}
+.dpop{grid-area:pop;font:700 13px var(--mono);color:var(--accent);text-align:right}
+.day[open] .dname{color:var(--accent)}
+.dfull{display:grid;gap:8px;padding:0 0 14px;font-size:15px;line-height:1.5}
+.dfull b{color:var(--fg)}
+.rays{text-decoration:none;color:var(--fg)}
+.rays .mid{color:var(--accent)}
+
+/* Map overlays *//* Map overlays */
 .ovl{position:absolute;z-index:800;pointer-events:auto}
 .radarbar{flex:none;display:flex;align-items:center;gap:12px;background:var(--panel);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 16px}
 .play{flex:none;width:38px;height:38px;border-radius:50%;border:0;background:var(--accent);color:#03141c;font-size:15px;font-weight:900;cursor:pointer}
@@ -98,7 +141,6 @@ button{font:inherit;color:inherit}
 .seg button[aria-checked="true"]{background:var(--accent);color:#03141c}
 .cell.small{width:26px;height:26px;font-size:11px;border-width:2px}
 @media (pointer:coarse){.tb.zoom{display:none}}
-@media (max-width:959px){#btnPanel{display:none}}
 .legend{background:rgba(10,14,19,.86);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-family:var(--mono);font-size:11px;color:var(--mute)}
 .legend .bar{width:150px;height:10px;border-radius:3px;background:linear-gradient(90deg,#04e9e7 0%,#019ff4 12%,#02fd02 25%,#01c501 35%,#fdf802 48%,#e5bc00 56%,#fd9500 64%,#fd0000 74%,#bc0000 82%,#f800fd 92%,#9854c6 100%)}
 .legend .ticks{display:flex;justify-content:space-between;width:150px}
@@ -145,8 +187,9 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
 
 /* Hourly strip */
 .hourly{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}
-.hr{flex:none;width:60px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;display:grid;gap:4px}
+.hr{flex:none;width:62px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;display:grid;gap:4px}
 .hr .t{font:600 12px/1 var(--mono);color:var(--mute)}
+.hr .ico{font-size:20px;line-height:1}
 .hr .tmp{font-size:22px;font-weight:800}
 .hr .pbar{height:56px;display:flex;align-items:flex-end;justify-content:center;background:var(--panel2);border-radius:6px;overflow:hidden}
 .hr .pbar i{display:block;width:100%;background:var(--accent)}
@@ -197,139 +240,175 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
 </head>
 <body>
 <div class="app">
-  <header class="banner" id="banner">
+  <header class="banner" id="banner" role="button" tabindex="0" aria-label="Open alerts">
     <div class="lamp"></div>
     <div class="txt"><h1 id="bHead">Loading radar…</h1><p id="bSub">Pulling NEXRAD, storm cells and NWS alerts</p></div>
   </header>
 
-  <div class="main">
-    <div class="mapcol">
-    <div class="mapwrap">
-      <div id="map" aria-label="Radar map"></div>
-      <div class="ovl tl">
-        <div class="legend" id="legend" aria-hidden="true">
-          <div style="margin-bottom:3px">REFLECTIVITY dBZ</div>
-          <div class="bar"></div>
-          <div class="ticks"><span>5</span><span>30</span><span>45</span><span>60</span><span>75</span></div>
-        </div>
-        <button class="cellpill" id="cellPill" aria-label="Storm cell display, tap to change">Cells: …</button>
-      </div>
-      <div class="ovl fsbanner" id="fsBanner" hidden><b id="fsHead"></b><span id="fsSub"></span></div>
-      <div class="ovl layers" id="layersPanel" hidden role="dialog" aria-label="Map layers">
-        <div class="lyhead"><b>Map layers</b><button class="tbtn sm" id="btnLayersClose" aria-label="Close layers">✕</button></div>
-        <div class="lyrow col"><span>Storm cells</span>
-          <div class="seg" id="segCells" role="radiogroup">
-            <button data-v="mine" role="radio">Headed my way</button><button data-v="all" role="radio">All</button><button data-v="off" role="radio">Off</button>
+  <main class="views">
+    <section class="view" id="v-radar" aria-label="Radar">
+      <div class="radarlayout">
+        <div class="mapcol">
+        <div class="mapwrap">
+          <div id="map" aria-label="Radar map"></div>
+          <div class="ovl tl">
+            <div class="legend" id="legend" aria-hidden="true">
+              <div style="margin-bottom:3px">REFLECTIVITY dBZ</div>
+              <div class="bar"></div>
+              <div class="ticks"><span>5</span><span>30</span><span>45</span><span>60</span><span>75</span></div>
+            </div>
+            <button class="cellpill" id="cellPill" aria-label="Storm cell display, tap to change">Cells: …</button>
           </div>
-          <small>"Headed my way" shows only cells projected to reach you within 90 min, plus any tornado signature within 60 mi.</small>
+          <div class="ovl fsbanner" id="fsBanner" hidden><b id="fsHead"></b><span id="fsSub"></span></div>
+          <div class="ovl layers" id="layersPanel" hidden role="dialog" aria-label="Map layers">
+            <div class="lyhead"><b>Map layers</b><button class="tbtn sm" id="btnLayersClose" aria-label="Close layers">✕</button></div>
+            <div class="lyrow col"><span>Storm cells</span>
+              <div class="seg" id="segCells" role="radiogroup">
+                <button data-v="mine" role="radio">Headed my way</button><button data-v="all" role="radio">All</button><button data-v="off" role="radio">Off</button>
+              </div>
+              <small>"Headed my way" shows only cells projected to reach you within 90 min, plus any tornado signature within 60 mi.</small>
+            </div>
+            <label class="lyrow"><span>Warning boxes &amp; NWS storm tracks</span><input type="checkbox" id="lyWarn"></label>
+            <label class="lyrow"><span>Tropical track &amp; cone</span><input type="checkbox" id="lyTrop"></label>
+            <label class="lyrow"><span>Road closures &amp; incidents (NC)</span><input type="checkbox" id="lyRoads"></label>
+            <label class="lyrow"><span>Distance rings</span><input type="checkbox" id="lyRings"></label>
+            <label class="lyrow"><span>Color legend</span><input type="checkbox" id="lyLegend"></label>
+          </div>
+          <div class="ovl modehint" id="modeHint" hidden>Tap the map to set home</div>
         </div>
-        <label class="lyrow"><span>Warning boxes &amp; NWS storm tracks</span><input type="checkbox" id="lyWarn"></label>
-        <label class="lyrow"><span>Tropical track &amp; cone</span><input type="checkbox" id="lyTrop"></label>
-        <label class="lyrow"><span>Road closures &amp; incidents (NC)</span><input type="checkbox" id="lyRoads"></label>
-        <label class="lyrow"><span>Distance rings</span><input type="checkbox" id="lyRings"></label>
-        <label class="lyrow"><span>Color legend</span><input type="checkbox" id="lyLegend"></label>
+        <div class="radarbar">
+          <button class="play" id="btnPlay" aria-label="Pause radar loop">❚❚</button>
+          <div class="frameinfo"><div class="frametime" id="frameTime">--:--</div><div class="framesub" id="frameSub">radar loop</div></div>
+          <input type="range" id="scrub" min="0" max="11" value="11" aria-label="Radar frame">
+        </div>
+        <nav class="toolbar" aria-label="Map tools">
+          <button class="tb" id="btnCenter" title="Center on home"><i>⌂</i><span>Home</span></button>
+          <button class="tb" id="btnLocate" title="Use my GPS location"><i>◎</i><span>My GPS</span></button>
+          <button class="tb" id="btnSetHome" title="Tap the map to set home" aria-label="Set home: tap the map"><i>✚</i><span>Pin</span></button>
+          <button class="tb" id="btnLayers" title="Map layers"><i>◧</i><span>Layers</span></button>
+          <button class="tb" id="btnBase" title="Change basemap"><i>▦</i><span>Map</span></button>
+          <button class="tb" id="btnFull" title="Full screen"><i>⛶</i><span>Expand</span></button>
+          <button class="tb zoom" id="btnZoomIn" title="Zoom in"><i>+</i><span>Zoom in</span></button>
+          <button class="tb zoom" id="btnZoomOut" title="Zoom out"><i>−</i><span>Zoom out</span></button>
+        </nav>
+        </div>
+        <aside class="radarside">
+          <section class="sec" id="tropSec" hidden>
+            <h2>Tropical system track <span id="tropMeta"></span></h2>
+            <div class="list" id="trop"></div>
+          </section>
+          <section class="sec">
+            <h2>Headed your way <span id="threatMeta"></span></h2>
+            <div class="list" id="threats"><div class="empty">Scanning storm cells…</div></div>
+          </section>
+        </aside>
       </div>
-      <div class="ovl modehint" id="modeHint" hidden>Tap the map to set home</div>
+    </section>
+
+    <section class="view page" id="v-forecast" aria-label="Forecast" hidden>
+      <div class="pagein">
+        <section class="sec">
+          <h2>Right now <span id="obsMeta"></span></h2>
+          <div class="card now" id="nowCard"><div class="empty">Loading current conditions…</div></div>
+        </section>
+        <section class="sec">
+          <h2>Next 24 hours <span id="fcstMeta"></span></h2>
+          <div class="hourly" id="hourly"></div>
+        </section>
+        <section class="sec">
+          <h2>7-day forecast <span>tap a day for details</span></h2>
+          <div class="card days" id="days"><div class="empty">Loading forecast…</div></div>
+        </section>
+        <a class="card rays" style="--c:var(--accent)" href="https://raysweather.com/Forecast/Asheville" target="_blank" rel="noopener">
+        <span class="mid">Ray's Weather · Asheville ↗</span>
+        <span class="sub">The local mountain forecast WNC swears by. Opens raysweather.com.</span>
+      </a>
+      <p class="fine">Forecast and current conditions: National Weather Service, for your home spot.</p>
+      </div>
+    </section>
+
+    <section class="view page" id="v-alerts" aria-label="Alerts" hidden>
+      <div class="pagein">
+        <section class="sec">
+          <h2>Alerts for home <span id="alertMeta"></span></h2>
+          <div class="list" id="alerts"><div class="empty">Checking NWS…</div></div>
+        </section>
+        <section class="sec">
+          <h2>French Broad at Asheville <span id="riverMeta"></span></h2>
+          <div id="river" class="card"><div class="empty">Loading gauge…</div></div>
+        </section>
+        <section class="sec">
+          <h2>Settings</h2>
+          <div class="ctrls">
+            <button class="chip" id="btnSound">🔔 Sound alerts: off</button>
+            <button class="chip" id="btnWake">☀ Keep screen on: off</button>
+            <button class="chip" id="btnRefresh">↻ Refresh now</button>
+          </div>
+        </section>
+        <section class="sec">
+          <h2>Data feeds</h2>
+          <div class="status" id="status"></div>
+          <p class="fine">Radar: NEXRAD base reflectivity mosaic via Iowa Environmental Mesonet, 5-min updates. Storm paths: NEXRAD storm-cell motion vectors (SCIT) projected 60 min, plus official NWS warning motion. Projections assume straight-line motion; cells can turn, split or die. Tropical track: latest NHC forecast advisory (TCM) parsed from api.weather.gov. Alerts and forecast: api.weather.gov. Not a substitute for NWS warnings or a NOAA weather radio.</p>
+        </section>
+      </div>
+    </section>
+
+    <section class="view page" id="v-power" aria-label="Power outages" hidden>
+      <div class="pagein">
+        <section class="sec" id="powerSec">
+          <h2>Power outages <span>Duke Energy · NC &amp; SC</span></h2>
+          <div class="dukewrap">
+            <iframe id="dukeMap" src="https://outagemap.duke-energy.com/#/current-outages/ncsc" title="Duke Energy live outage map for North and South Carolina" loading="lazy" referrerpolicy="no-referrer" allow="geolocation"></iframe>
+          </div>
+          <div class="dukebar">
+            <a class="btnlink primary" href="https://outagemap.duke-energy.com/#/current-outages/ncsc" target="_blank" rel="noopener">Open full screen ↗</a>
+            <a class="btnlink" href="tel:8007693766">📞 Report: 800-769-3766</a>
+          </div>
+          <div class="sub">Map blank or stuck? Tap "Open full screen."</div>
+          <div class="card other" style="--c:var(--line)">
+            <div class="mid">Other areas?</div>
+            <div class="sub">Duke Energy outage maps for Florida, Indiana, Ohio and Kentucky.</div>
+            <a class="pwall" href="https://outagemap.duke-energy.com/#/home" target="_blank" rel="noopener">All Duke Energy outage maps ↗</a>
+          </div>
+          <details class="card coops" style="--c:var(--yellow)">
+            <summary><span class="mid">Not a Duke customer?</span><span class="sub">Local co-ops · it's the name on your power bill</span></summary>
+            <div class="pwlist" id="pwList"></div>
+            <a class="pwall" href="https://www.readync.gov/stay-informed/power-outages" target="_blank" rel="noopener">All NC utilities (ReadyNC) ↗</a>
+          </details>
+          <details class="card pwsafe" style="--c:var(--red)">
+            <summary><span class="mid">Outage safety</span><span class="sub">Generators, downed lines, food</span></summary>
+            <ul>
+              <li><b>Generators outside only.</b> Never run one in a house, garage, basement or shed, even with doors open. Keep it at least 20 ft from windows and doors. Carbon monoxide has no smell; headache, dizziness or nausea means get everyone outside and call 911.</li>
+              <li><b>Have a working CO alarm</b> with fresh batteries on every sleeping floor.</li>
+              <li><b>Treat every downed line as live.</b> Stay 35 ft away, never drive over one, and report it to your utility.</li>
+              <li><b>Never backfeed</b> a generator into a wall outlet. It can kill a lineworker down the road; use a transfer switch.</li>
+              <li><b>Food:</b> a closed fridge stays cold about 4 hours, a full freezer about 48. Toss perishables that sat above 40°F for more than 2 hours.</li>
+              <li><b>Medical devices:</b> if someone depends on oxygen or other powered equipment and power will be out long, go to a shelter or hospital early, not at the last minute.</li>
+            </ul>
+          </details>
+        </section>
+      </div>
+    </section>
+
+    <section class="view page" id="v-roads" aria-label="Roads" hidden>
+      <div class="pagein">
+        <section class="sec">
+          <h2>Roads near you <span id="roadMeta"></span></h2>
+          <div class="list" id="roads"><div class="empty">Checking NCDOT DriveNC…</div></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Sections">
+    <div class="tabin" role="tablist">
+      <button class="tab" role="tab" data-v="radar" aria-selected="true"><i>◉</i><span>Radar</span><b class="badge" id="bdg-radar" hidden></b></button>
+      <button class="tab" role="tab" data-v="forecast" aria-selected="false"><i>☀</i><span>Forecast</span><b class="badge" id="bdg-forecast" hidden></b></button>
+      <button class="tab" role="tab" data-v="alerts" aria-selected="false"><i>⚠</i><span>Alerts</span><b class="badge" id="bdg-alerts" hidden></b></button>
+      <button class="tab" role="tab" data-v="power" aria-selected="false"><i>⚡</i><span>Power</span><b class="badge" id="bdg-power" hidden></b></button>
+      <button class="tab" role="tab" data-v="roads" aria-selected="false"><i>⛟</i><span>Roads</span><b class="badge" id="bdg-roads" hidden></b></button>
     </div>
-    <div class="radarbar">
-      <button class="play" id="btnPlay" aria-label="Pause radar loop">❚❚</button>
-      <div class="frameinfo"><div class="frametime" id="frameTime">--:--</div><div class="framesub" id="frameSub">radar loop</div></div>
-      <input type="range" id="scrub" min="0" max="11" value="11" aria-label="Radar frame">
-    </div>
-    <nav class="toolbar" aria-label="Map tools">
-      <button class="tb" id="btnCenter" title="Center on home"><i>⌂</i><span>Home</span></button>
-      <button class="tb" id="btnLocate" title="Use my GPS location"><i>◎</i><span>My GPS</span></button>
-      <button class="tb" id="btnSetHome" title="Tap the map to set home" aria-label="Set home: tap the map"><i>✚</i><span>Pin</span></button>
-      <button class="tb" id="btnLayers" title="Map layers"><i>◧</i><span>Layers</span></button>
-      <button class="tb" id="btnBase" title="Change basemap"><i>▦</i><span>Map</span></button>
-      <button class="tb" id="btnFull" title="Full screen"><i>⛶</i><span>Expand</span></button>
-      <button class="tb" id="btnPanel" title="Hide details panel"><i>⇥</i><span>Panel</span></button>
-      <button class="tb zoom" id="btnZoomIn" title="Zoom in"><i>+</i><span>Zoom in</span></button>
-      <button class="tb zoom" id="btnZoomOut" title="Zoom out"><i>−</i><span>Zoom out</span></button>
-    </nav>
-    </div>
-
-    <aside class="console" id="console">
-      <section class="sec" id="powerSec">
-        <h2>Power outages <span>Duke Energy · NC &amp; SC</span></h2>
-        <div class="dukewrap">
-          <iframe id="dukeMap" src="https://outagemap.duke-energy.com/#/current-outages/ncsc" title="Duke Energy live outage map for North and South Carolina" loading="lazy" referrerpolicy="no-referrer" allow="geolocation"></iframe>
-        </div>
-        <div class="dukebar">
-          <a class="btnlink primary" href="https://outagemap.duke-energy.com/#/current-outages/ncsc" target="_blank" rel="noopener">Open full screen ↗</a>
-          <a class="btnlink" href="tel:8007693766">📞 Report: 800-769-3766</a>
-        </div>
-        <div class="sub">Map blank or stuck? Tap "Open full screen."</div>
-        <div class="card other" style="--c:var(--line)">
-          <div class="mid">Other areas?</div>
-          <div class="sub">Duke Energy outage maps for Florida, Indiana, Ohio and Kentucky.</div>
-          <a class="pwall" href="https://outagemap.duke-energy.com/#/home" target="_blank" rel="noopener">All Duke Energy outage maps ↗</a>
-        </div>
-        <details class="card coops" style="--c:var(--yellow)">
-          <summary><span class="mid">Not a Duke customer?</span><span class="sub">Local co-ops · it's the name on your power bill</span></summary>
-          <div class="pwlist" id="pwList"></div>
-          <a class="pwall" href="https://www.readync.gov/stay-informed/power-outages" target="_blank" rel="noopener">All NC utilities (ReadyNC) ↗</a>
-        </details>
-        <details class="card pwsafe" style="--c:var(--red)">
-          <summary><span class="mid">Outage safety</span><span class="sub">Generators, downed lines, food</span></summary>
-          <ul>
-            <li><b>Generators outside only.</b> Never run one in a house, garage, basement or shed, even with doors open. Keep it at least 20 ft from windows and doors. Carbon monoxide has no smell; headache, dizziness or nausea means get everyone outside and call 911.</li>
-            <li><b>Have a working CO alarm</b> with fresh batteries on every sleeping floor.</li>
-            <li><b>Treat every downed line as live.</b> Stay 35 ft away, never drive over one, and report it to your utility.</li>
-            <li><b>Never backfeed</b> a generator into a wall outlet. It can kill a lineworker down the road; use a transfer switch.</li>
-            <li><b>Food:</b> a closed fridge stays cold about 4 hours, a full freezer about 48. Toss perishables that sat above 40°F for more than 2 hours.</li>
-            <li><b>Medical devices:</b> if someone depends on oxygen or other powered equipment and power will be out long, go to a shelter or hospital early, not at the last minute.</li>
-          </ul>
-        </details>
-      </section>
-
-      <section class="sec" id="tropSec" hidden>
-        <h2>Tropical system track <span id="tropMeta"></span></h2>
-        <div class="list" id="trop"></div>
-      </section>
-
-      <section class="sec">
-        <h2>Headed your way <span id="threatMeta"></span></h2>
-        <div class="list" id="threats"><div class="empty">Scanning storm cells…</div></div>
-      </section>
-
-      <section class="sec">
-        <h2>Roads near you <span id="roadMeta"></span></h2>
-        <div class="list" id="roads"><div class="empty">Checking NCDOT DriveNC…</div></div>
-      </section>
-
-      <section class="sec">
-        <h2>Alerts for home <span id="alertMeta"></span></h2>
-        <div class="list" id="alerts"><div class="empty">Checking NWS…</div></div>
-      </section>
-
-      <section class="sec">
-        <h2>Next 12 hours <span id="fcstMeta"></span></h2>
-        <div class="hourly" id="hourly"></div>
-        <div class="fcst" id="fcstText"></div>
-      </section>
-
-      <section class="sec">
-        <h2>French Broad at Asheville <span id="riverMeta"></span></h2>
-        <div id="river" class="card"><div class="empty">Loading gauge…</div></div>
-      </section>
-
-      <section class="sec">
-        <h2>Controls</h2>
-        <div class="ctrls">
-          <button class="chip" id="btnSound">🔔 Sound alerts: off</button>
-          <button class="chip" id="btnWake">☀ Keep screen on: off</button>
-          <button class="chip" id="btnRefresh">↻ Refresh now</button>
-        </div>
-      </section>
-
-      <section class="sec">
-        <h2>Data feeds</h2>
-        <div class="status" id="status"></div>
-        <p class="fine">Radar: NEXRAD base reflectivity mosaic via Iowa Environmental Mesonet, 5-min updates. Storm paths: NEXRAD storm-cell motion vectors (SCIT) projected 60 min, plus official NWS warning motion. Projections assume straight-line motion; cells can turn, split or die. Tropical track: latest NHC forecast advisory (TCM) parsed from api.weather.gov. Alerts and forecast: api.weather.gov. Not a substitute for NWS warnings or a NOAA weather radio.</p>
-      </section>
-    </aside>
-  </div>
+  </nav>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -679,6 +758,8 @@ function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt
 function renderAlerts(){
   const box = $("alerts"); box.textContent = "";
   $("alertMeta").textContent = S.homeAlerts.length ? S.homeAlerts.length+" active" : "";
+  const topRank = S.homeAlerts.length ? Math.min(...S.homeAlerts.map(a => alertRank(a.event))) : 99;
+  setBadge("alerts", S.homeAlerts.length, topRank <= 6 ? "" : "info");
   if(!S.homeAlerts.length){ box.append(el("div","empty","No active NWS alerts at your location.")); return; }
   for(const p of S.homeAlerts){
     const card = el("div","card"); card.style.setProperty("--c", alertColor(p.event));
@@ -702,6 +783,7 @@ function renderThreats(){
   const incoming = items.filter(i => isThreat(i.a)).sort((x, y) => x.a.eta - y.a.eta);
   const near = S.cells.length ? Math.min(...S.cells.map(c => c.a.dist)) : null;
   $("threatMeta").textContent = S.cells.length + " cells tracked";
+  setBadge("radar", incoming.length, incoming.some(i => i.kind === "warn" || (i.c && (i.c.tvs || i.c.meso))) ? "" : "warn");
   if(!incoming.length){
     const msg = S.cells.length ? `No cells on track to reach you in the next ${HORIZON_MIN} min. Nearest cell ${fmtMi(near)} mi away.` : "No storm cells detected within 125 mi.";
     box.append(el("div","empty",msg));
@@ -730,7 +812,7 @@ function renderThreats(){
       else if(c.poh >= 50) b.append(el("span","bdg","Hail "+c.poh+"%"));
     }
     card.append(b);
-    card.onclick = () => { const p = it.kind==="warn" ? it.w.now : it.c.now; map.flyTo(fromXY(p[0],p[1]), 10); };
+    card.onclick = () => { const p = it.kind==="warn" ? it.w.now : it.c.now; showTab("radar"); setTimeout(() => map.flyTo(fromXY(p[0],p[1]), 10), 60); };
     card.style.cursor = "pointer";
     box.append(card);
   }
@@ -781,32 +863,132 @@ function checkAlarms(){
 
 /* ---------- forecast ---------- */
 let pointsMeta = null;
+const CtoF = c => c == null ? null : c*9/5 + 32;
+function wxIcon(text, day){
+  const f = (text || "").toLowerCase();
+  if(/thunder|t-storm/.test(f)) return "⛈"; if(/snow|flurr/.test(f)) return "🌨"; if(/sleet|freezing|ice/.test(f)) return "🧊";
+  if(/rain|shower|drizzle/.test(f)) return "🌧"; if(/fog|haze|mist|smoke/.test(f)) return "🌫"; if(/wind|breezy|blustery/.test(f) && !/cloud/.test(f)) return "💨";
+  if(/partly|mostly sunny|mostly clear|few clouds/.test(f)) return day === false ? "☁" : "⛅";
+  if(/cloud|overcast/.test(f)) return "☁"; return day === false ? "🌙" : "☀";
+}
 async function refreshForecast(){
   const h = S.home;
   try{
     if(!pointsMeta || pointsMeta.key !== h.lat+","+h.lon){
       const p = await getJSON(`${NWS}/points/${h.lat.toFixed(4)},${h.lon.toFixed(4)}`);
-      pointsMeta = {key:h.lat+","+h.lon, hourly:p.properties.forecastHourly, daily:p.properties.forecast,
+      pointsMeta = {key:h.lat+","+h.lon, hourly:p.properties.forecastHourly, daily:p.properties.forecast, stations:p.properties.observationStations,
         place: p.properties.relativeLocation && p.properties.relativeLocation.properties.city};
     }
-    const [hr, dy] = await Promise.all([getJSON(pointsMeta.hourly), getJSON(pointsMeta.daily).catch(()=>null)]);
-    const box = $("hourly"); box.textContent = "";
-    for(const p of hr.properties.periods.slice(0,12)){
-      const pop = p.probabilityOfPrecipitation && p.probabilityOfPrecipitation.value || 0;
-      const c = el("div","hr"); c.title = p.shortForecast;
-      c.append(el("div","t",new Date(p.startTime).toLocaleTimeString([], {hour:"numeric"})));
-      c.append(el("div","tmp",p.temperature+"°"));
-      const bar = el("div","pbar"), fill = el("i"); fill.style.height = pop+"%";
-      fill.style.background = pop >= 70 ? "var(--accent)" : pop >= 40 ? "color-mix(in srgb,var(--accent) 65%,var(--panel2))" : "color-mix(in srgb,var(--accent) 35%,var(--panel2))";
-      bar.append(fill); c.append(bar);
-      c.append(el("div","pop",pop+"%"));
-      c.append(el("div","w",(p.windDirection||"")+"\n"+String(p.windSpeed||"").replace(" mph","")));
-      box.append(c);
-    }
-    $("fcstMeta").textContent = pointsMeta.place ? "near "+pointsMeta.place : "";
-    if(dy && dy.properties.periods[0]){ const d = dy.properties.periods[0]; $("fcstText").textContent = d.name+": "+d.detailedForecast; }
+    const [hr, dy] = await Promise.all([getJSON(pointsMeta.hourly), getJSON(pointsMeta.daily).catch(() => null)]);
+    const hours = hr.properties.periods;
+    renderHourly(hours);
+    renderDays(dy ? dy.properties.periods : []);
+    $("fcstMeta").textContent = pointsMeta.place ? "near " + pointsMeta.place : "";
+    renderNow(null, hours[0], dy ? dy.properties.periods : []);
+    refreshObs(hours[0], dy ? dy.properties.periods : []);
     setStatus("forecast", true);
-  }catch(e){ setStatus("forecast", false); $("hourly").textContent = ""; $("hourly").append(el("div","empty","Forecast unavailable right now.")); }
+  }catch(e){
+    setStatus("forecast", false);
+    $("hourly").textContent = ""; $("hourly").append(el("div","empty","Forecast unavailable right now. Check your signal."));
+  }
+}
+async function refreshObs(hour0, daily){
+  try{
+    if(!pointsMeta.station){
+      const st = await getJSON(pointsMeta.stations);
+      const f = st.features && st.features[0];
+      if(!f) return;
+      pointsMeta.station = {id: f.properties.stationIdentifier, name: f.properties.name};
+    }
+    const o = await getJSON(`${NWS}/stations/${pointsMeta.station.id}/observations/latest`);
+    renderNow(o.properties, hour0, daily);
+  }catch(e){}
+}
+function renderNow(obs, hour0, daily){
+  const box = $("nowCard"); box.textContent = "";
+  const fresh = obs && obs.temperature && obs.temperature.value != null && (Date.now() - new Date(obs.timestamp)) < 3*3.6e6;
+  const tF = fresh ? Math.round(CtoF(obs.temperature.value)) : hour0 && hour0.temperature;
+  const desc = fresh && obs.textDescription ? obs.textDescription : hour0 ? hour0.shortForecast : "";
+  const isDay = hour0 ? hour0.isDaytime : true;
+  const top = el("div","nowtop");
+  top.append(el("div","nowico",wxIcon(desc, isDay)));
+  const t = el("div"); t.append(el("div","nowtemp",tF != null ? tF + "°" : "–"), el("div","nowdesc",desc));
+  top.append(t); box.append(top);
+  // today's high / low from the daily forecast
+  const dayP = daily.find(p => p.isDaytime), nightP = daily.find(p => !p.isDaytime);
+  const hl = [];
+  if(dayP && daily[0] && daily[0].isDaytime) hl.push(`High ${dayP.temperature}°`);
+  if(nightP) hl.push(`Low ${nightP.temperature}°`);
+  let feels = null;
+  if(fresh){ const fc = (obs.heatIndex && obs.heatIndex.value != null) ? obs.heatIndex.value : (obs.windChill && obs.windChill.value != null) ? obs.windChill.value : null; if(fc != null) feels = Math.round(CtoF(fc)); }
+  if(feels != null && Math.abs(feels - tF) >= 2) hl.push(`Feels like ${feels}°`);
+  if(hl.length) box.append(el("div","nowsub",hl.join(" · ")));
+  const g = el("div","nowgrid");
+  const cell = (k, v) => { const d = el("div"); d.append(el("small",null,k), el("b",null,v)); g.append(d); };
+  if(fresh){
+    const kmh = obs.windSpeed && obs.windSpeed.value, gust = obs.windGust && obs.windGust.value, dir = obs.windDirection && obs.windDirection.value;
+    cell("Wind", kmh != null ? `${dir != null ? compass(dir) + " " : ""}${Math.round(kmh*0.621)}${gust ? "–" + Math.round(gust*0.621) : ""} mph` : "Calm");
+    cell("Humidity", obs.relativeHumidity && obs.relativeHumidity.value != null ? Math.round(obs.relativeHumidity.value) + "%" : "–");
+    cell("Dew point", obs.dewpoint && obs.dewpoint.value != null ? Math.round(CtoF(obs.dewpoint.value)) + "°" : "–");
+    cell("Pressure", obs.barometricPressure && obs.barometricPressure.value != null ? (obs.barometricPressure.value*0.0002953).toFixed(2) + " in" : "–");
+    cell("Visibility", obs.visibility && obs.visibility.value != null ? Math.min(10, Math.round(obs.visibility.value/1609)) + " mi" : "–");
+  } else if(hour0){
+    cell("Wind", `${hour0.windDirection || ""} ${String(hour0.windSpeed || "").replace(" mph","")} mph`);
+    cell("Humidity", hour0.relativeHumidity && hour0.relativeHumidity.value != null ? hour0.relativeHumidity.value + "%" : "–");
+  }
+  const pop = hour0 && hour0.probabilityOfPrecipitation && hour0.probabilityOfPrecipitation.value;
+  cell("Rain chance", (pop || 0) + "%");
+  box.append(g);
+  $("obsMeta").textContent = fresh && pointsMeta.station ? `${pointsMeta.station.name.split(",")[0]} · ${fmtT(new Date(obs.timestamp))}` : (hour0 ? "forecast for this hour" : "");
+}
+function renderHourly(hours){
+  const box = $("hourly"); box.textContent = "";
+  let lastDay = null;
+  for(const p of hours.slice(0, 24)){
+    const d = new Date(p.startTime), pop = p.probabilityOfPrecipitation && p.probabilityOfPrecipitation.value || 0;
+    const c = el("div","hr"); c.title = p.shortForecast;
+    const dayKey = d.toDateString();
+    c.append(el("div","t", lastDay && dayKey !== lastDay ? d.toLocaleDateString([], {weekday:"short"}) : d.toLocaleTimeString([], {hour:"numeric"})));
+    lastDay = dayKey;
+    c.append(el("div","ico",wxIcon(p.shortForecast, p.isDaytime)));
+    c.append(el("div","tmp",p.temperature+"°"));
+    const bar = el("div","pbar"), fill = el("i"); fill.style.height = pop+"%";
+    fill.style.background = pop >= 70 ? "var(--accent)" : pop >= 40 ? "color-mix(in srgb,var(--accent) 65%,var(--panel2))" : "color-mix(in srgb,var(--accent) 35%,var(--panel2))";
+    bar.append(fill); c.append(bar);
+    c.append(el("div","pop",pop+"%"));
+    c.append(el("div","w",(p.windDirection||"")+"\n"+String(p.windSpeed||"").replace(" mph","")));
+    box.append(c);
+  }
+}
+function renderDays(periods){
+  const box = $("days"); box.textContent = "";
+  if(!periods.length){ box.append(el("div","empty","Daily forecast unavailable right now.")); return; }
+  // group day + following night
+  const days = [];
+  for(let i = 0; i < periods.length; i++){
+    const p = periods[i];
+    if(p.isDaytime){ const n = periods[i+1] && !periods[i+1].isDaytime ? periods[i+1] : null; days.push({day:p, night:n}); if(n) i++; }
+    else days.push({day:null, night:p});
+  }
+  const temps = periods.map(p => p.temperature), lo = Math.min(...temps), hi = Math.max(...temps), span = Math.max(1, hi - lo);
+  days.slice(0, 7).forEach(({day, night}) => {
+    const main = day || night, d = document.createElement("details"); d.className = "day";
+    const s2 = document.createElement("summary");
+    const name = day ? (/today|this afternoon/i.test(day.name) ? "Today" : day.name.slice(0, 3)) : "Tonight";
+    const high = day ? day.temperature : null, low = night ? night.temperature : null;
+    const pops = [day, night].filter(Boolean).map(p => p.probabilityOfPrecipitation && p.probabilityOfPrecipitation.value || 0);
+    const range = el("div","drange");
+    range.append(el("span",null, low != null ? low + "°" : ""));
+    const bar = el("div","dbar"), fill = el("i");
+    const a = low != null ? low : high, b = high != null ? high : low;
+    fill.style.left = ((a - lo)/span*100) + "%"; fill.style.width = Math.max(4, (b - a)/span*100) + "%";
+    bar.append(fill); range.append(bar);
+    s2.append(el("span","dname",name), el("span","dico",wxIcon(main.shortForecast, !!day)), range, el("span","dhi", high != null ? high + "°" : ""),
+      el("span","ddesc",main.shortForecast), el("span","dpop", Math.max(...pops) ? "💧" + Math.max(...pops) + "%" : ""));
+    const full = el("div","dfull");
+    for(const p of [day, night].filter(Boolean)){ const para = el("p"); para.style.margin = "0"; para.append(el("b",null,p.name + ": "), p.detailedForecast); full.append(para); }
+    d.append(s2, full); box.append(d);
+  });
 }
 
 /* ---------- river gauge ---------- */
@@ -1004,7 +1186,7 @@ function renderTropical(via){
     }
     card.append(tbl);
     const fit = el("button","chip","Show full track");
-    fit.onclick = () => map.fitBounds(L.latLngBounds([...st.pts.map(p => p.ll), [S.home.lat, S.home.lon]]).pad(0.2));
+    fit.onclick = () => { showTab("radar"); setTimeout(() => map.fitBounds(L.latLngBounds([...st.pts.map(p => p.ll), [S.home.lat, S.home.lon]]).pad(0.2)), 60); };
     card.append(fit);
     card.append(el("div","sub",`${st.source}${st.adv ? " #"+st.adv : ""}, issued ${fmtDay(st.issued)}. ${st.official ? "Cone drawn from NHC average track-error radii, so it approximates the official cone. " : ""}Wind, rain and flooding reach far beyond the center line.`));
     box.append(card);
@@ -1129,7 +1311,7 @@ function roadCard(i, compact){
   foot.append((p.LastUpdateDateTime ? "Updated "+fmtDay(new Date(p.LastUpdateDateTime)) : "")+" ");
   if(p.DriveNCLink){ const a = el("a",null,"DriveNC ↗"); a.href = p.DriveNCLink; a.target = "_blank"; a.rel = "noopener"; foot.append(a); }
   card.append(foot);
-  card.onclick = e => { if(e.target.closest("a,summary,details")) return; if(!S.layers.roads){ S.layers.roads = true; applyLayers(); } map.flyTo([i.lat, i.lon], 12); };
+  card.onclick = e => { if(e.target.closest("a,summary,details")) return; if(!S.layers.roads){ S.layers.roads = true; applyLayers(); } showTab("radar"); setTimeout(() => map.flyTo([i.lat, i.lon], 12), 60); };
   card.style.cursor = "pointer";
   return card;
 }
@@ -1137,6 +1319,7 @@ function renderRoads(live, work){
   const box = $("roads"); box.textContent = "";
   const closures = live.filter(i => i.closed).length;
   $("roadMeta").textContent = `${live.length} incident${live.length === 1 ? "" : "s"} · ${closures} closed · ${ROAD_MI} mi`;
+  setBadge("roads", closures, "warn");
   if(!live.length) box.append(el("div","empty",`No active incidents on NC roads within ${ROAD_MI} mi.`));
   live.slice(0, 12).forEach(i => box.append(roadCard(i, false)));
   if(live.length > 12) box.append(el("div","empty",`+${live.length-12} more on the map (Layers → Road closures).`));
@@ -1181,24 +1364,27 @@ function syncFs(){
 document.addEventListener("fullscreenchange", syncFs);
 $("btnFull").onclick = () => setFs(!isFs());
 
-/* ---------- details panel (desktop layout) ---------- */
-function setPanel(open){
-  $("console").closest(".main").classList.toggle("collapsed", !open);
-  const b = $("btnPanel"); b.querySelector("i").textContent = open ? "⇥" : "⇤";
-  b.title = open ? "Hide details panel" : "Show details panel"; b.setAttribute("aria-label", b.title);
-  b.classList.toggle("on", !open); save("sw_panel", open);
-  setTimeout(() => map.invalidateSize(), 60);
+/* ---------- tabs ---------- */
+const TABS = ["radar","forecast","alerts","power","roads"];
+let currentTab = "radar";
+function showTab(v){
+  if(!TABS.includes(v)) v = "radar";
+  currentTab = v;
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.v === v)));
+  for(const id of TABS) $("v-"+id).hidden = id !== v;
+  if(v === "radar") setTimeout(() => map.invalidateSize(), 30);
+  if(v !== "radar") toggleLayers(false);
+  try{ history.replaceState(null, "", v === "radar" ? location.pathname + location.search : "#" + v); }catch(e){}
 }
-$("btnPanel").onclick = () => setPanel($("console").closest(".main").classList.contains("collapsed"));
-(() => { // swipe the panel to the right to hide it
-  let x0 = null, y0 = null; const c = $("console");
-  c.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive:true});
-  c.addEventListener("touchend", e => {
-    if(x0 == null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
-    if(dx > 90 && Math.abs(dy) < 60 && window.matchMedia("(min-width:960px)").matches) setPanel(false);
-  }, {passive:true});
-})();
-setPanel(load("sw_panel", true));
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => { if(t.dataset.v === currentTab) $("v-"+currentTab).scrollTo({top:0, behavior:"smooth"}); else showTab(t.dataset.v); });
+$("banner").onclick = () => showTab(S.homeAlerts.length ? "alerts" : "radar");
+$("banner").onkeydown = e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); $("banner").click(); } };
+window.addEventListener("hashchange", () => showTab(location.hash.slice(1) || "radar"));
+function setBadge(tab, n, kind){
+  const b = $("bdg-"+tab); if(!b) return;
+  b.hidden = !n; b.textContent = n > 99 ? "99+" : String(n || "");
+  b.className = "badge" + (kind ? " " + kind : "");
+}
 window.addEventListener("resize", () => map.invalidateSize());
 
 /* ---------- power outages ---------- */
@@ -1222,6 +1408,7 @@ const UTILITIES = [
 /* ---------- schedule ---------- */
 function refreshAll(){ refreshRadar(); refreshCells(); refreshAlerts(); refreshForecast(); refreshRiver(); refreshTropical(); refreshRoads(); }
 drawHome(); toggleLayers(false); applyLayers(); showFrame(frame); setPlaying(true); refreshAll();
+showTab(location.hash.slice(1) || "radar");
 setInterval(refreshRadar, 2.5*60000);
 setInterval(refreshCells, 2*60000);
 setInterval(refreshAlerts, 60000);
