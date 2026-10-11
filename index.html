@@ -77,7 +77,7 @@ button{font:inherit;color:inherit}
 .days{gap:0;padding-block:4px}
 .day{border-bottom:1px solid var(--line)}
 .day:last-child{border-bottom:0}
-.day summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:62px 34px minmax(0,1fr) 44px;grid-template-areas:"name ico range hi" "desc desc desc pop";gap:2px 10px;align-items:center;padding:12px 0}
+.day summary{list-style:none;cursor:pointer;color:var(--fg);margin-top:0;font-weight:inherit;display:grid;grid-template-columns:62px 34px minmax(0,1fr) 44px;grid-template-areas:"name ico range hi" "desc desc desc pop";gap:2px 10px;align-items:center;padding:12px 0}
 .day summary::-webkit-details-marker{display:none}
 .dname{grid-area:name;font-weight:800;font-size:17px}
 .dico{grid-area:ico;font-size:26px;text-align:center}
@@ -236,9 +236,55 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
 .fine{font-size:12px;color:var(--mute);line-height:1.5}
 .fine a{color:var(--mute)}
 @media (prefers-reduced-motion:reduce){.banner.pulse .lamp,.home,.tcnow{animation:none}}
+
+/* Splash */
+.splash{position:fixed;inset:0;z-index:20000;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(120% 80% at 50% 35%,#13202d 0%,var(--bg) 60%);transition:opacity .45s ease,visibility .45s;padding:24px}
+.splash.out{opacity:0;visibility:hidden}
+.splash-in{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.splash .mark{max-width:40vw;height:auto}
+.splash .sweep{transform-origin:60px 60px;animation:sweep 1.6s linear infinite}
+.splash .blip{animation:blip 1.6s ease-out infinite}
+@keyframes sweep{to{transform:rotate(360deg)}}
+@keyframes blip{0%,30%{opacity:0}40%{opacity:1}100%{opacity:.15}}
+.splash-name{font-size:clamp(44px,13vw,72px);font-weight:900;font-stretch:72%;text-transform:uppercase;letter-spacing:.02em;line-height:.95;animation:rise .6s cubic-bezier(.2,.8,.2,1) both .1s}
+.splash-name b{color:var(--accent);font-weight:900}
+.splash-tag{font:600 13px/1.4 var(--mono);color:var(--mute);letter-spacing:.04em;animation:rise .6s cubic-bezier(.2,.8,.2,1) both .25s}
+.splash-foot{position:absolute;bottom:calc(28px + env(safe-area-inset-bottom,0px));font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);opacity:.7}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.splash .sweep,.splash .blip,.splash-name,.splash-tag{animation:none}}
 </style>
 </head>
 <body>
+<div id="splash" class="splash" aria-hidden="true">
+  <div class="splash-in">
+    <svg class="mark" viewBox="0 0 120 120" width="132" height="132">
+      <defs>
+        <radialGradient id="sg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#4fd3ff" stop-opacity=".22"/><stop offset="1" stop-color="#4fd3ff" stop-opacity="0"/></radialGradient>
+        <linearGradient id="sw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4fd3ff" stop-opacity="0"/><stop offset="1" stop-color="#4fd3ff" stop-opacity=".75"/></linearGradient>
+      </defs>
+      <circle cx="60" cy="60" r="56" fill="url(#sg)"/>
+      <circle cx="60" cy="60" r="54" fill="none" stroke="#26364a" stroke-width="2"/>
+      <circle cx="60" cy="60" r="36" fill="none" stroke="#26364a" stroke-width="2"/>
+      <circle cx="60" cy="60" r="18" fill="none" stroke="#26364a" stroke-width="2"/>
+      <g class="sweep"><path d="M60 60 L60 6 A54 54 0 0 1 106.8 33 Z" fill="url(#sw)"/></g>
+      <circle class="blip" cx="84" cy="40" r="5" fill="#ffd43b"/>
+      <circle cx="60" cy="60" r="6" fill="#eef4fa"/>
+    </svg>
+    <div class="splash-name" id="splashName">Storm <b>Watch</b></div>
+    <div class="splash-tag">Radar · Forecast · Alerts · Power · Roads</div>
+  </div>
+  <div class="splash-foot">Western North Carolina</div>
+</div>
+<script>
+/* Splash: shows ~1.6 s on the first open of a session, never blocks the app loading underneath */
+(function(){
+  var sp = document.getElementById("splash"), seen = false;
+  try{ seen = sessionStorage.getItem("sw_splash") === "1"; sessionStorage.setItem("sw_splash", "1"); }catch(e){}
+  if(seen){ sp.remove(); return; }
+  setTimeout(function(){ sp.classList.add("out"); setTimeout(function(){ sp.remove(); }, 500); }, 1600);
+  sp.addEventListener("click", function(){ sp.classList.add("out"); setTimeout(function(){ sp.remove(); }, 300); });
+})();
+</script>
 <div class="app">
   <header class="banner" id="banner" role="button" tabindex="0" aria-label="Open alerts">
     <div class="lamp"></div>
@@ -939,7 +985,8 @@ function renderNow(obs, hour0, daily){
   const pop = hour0 && hour0.probabilityOfPrecipitation && hour0.probabilityOfPrecipitation.value;
   cell("Rain chance", (pop || 0) + "%");
   box.append(g);
-  $("obsMeta").textContent = fresh && pointsMeta.station ? `${pointsMeta.station.name.split(",")[0]} · ${fmtT(new Date(obs.timestamp))}` : (hour0 ? "forecast for this hour" : "");
+  $("obsMeta").textContent = fresh ? "updated " + fmtT(new Date(obs.timestamp)) : (hour0 ? "forecast for this hour" : "");
+  if(fresh && pointsMeta.station) box.append(el("div","nowsub","Measured at " + pointsMeta.station.name.split(",")[0]));
 }
 function renderHourly(hours){
   const box = $("hourly"); box.textContent = "";
