@@ -99,6 +99,17 @@ button{font:inherit;color:inherit}
 .dfull{display:grid;gap:8px;padding:0 0 14px;font-size:15px;line-height:1.5}
 .dfull b{color:var(--fg)}
 .rays{text-decoration:none;color:var(--fg)}
+.media{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 12px;text-decoration:none;color:var(--fg)}
+.media .mname{font-size:19px;font-weight:800}
+.media .mnote{color:var(--mute);font-size:14px}
+.media .mgo{grid-row:1 / span 2;grid-column:2;font-weight:800;color:var(--accent);white-space:nowrap}
+.linkrow{display:flex;flex-wrap:wrap;gap:8px}
+.linkrow a{flex:1 1 160px}
+.nwsprod .when{font:600 13px var(--mono);color:var(--mute)}
+.nwsprod .lead{font-size:16px;line-height:1.55;white-space:pre-line}
+.nwsprod details summary{margin-top:6px}
+.nwsprod .full{white-space:pre-wrap;font:14px/1.5 var(--mono);color:var(--fg);max-height:55vh;overflow:auto;margin-top:8px;background:var(--panel2);border-radius:8px;padding:10px}
+.tab span{white-space:nowrap}
 .rays .mid{color:var(--accent)}
 
 /* Map overlays *//* Map overlays */
@@ -459,6 +470,23 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
         </section>
       </div>
     </section>
+    <section class="view page" id="v-news" aria-label="Local weather news" hidden>
+      <div class="pagein">
+        <section class="sec">
+          <h2>Local weather coverage <span id="newsPlace"></span></h2>
+          <div class="list" id="newsMedia"><div class="empty">Finding your local stations…</div></div>
+        </section>
+        <section class="sec">
+          <h2>Latest stories</h2>
+          <div class="list" id="newsSearch"></div>
+        </section>
+        <section class="sec">
+          <h2>From your NWS forecasters <span id="nwsOffice"></span></h2>
+          <div class="list" id="newsNws"><div class="empty">Loading the latest forecaster reports…</div></div>
+        </section>
+        <p class="fine">Stations are matched to the National Weather Service office that covers your home spot. Story links search Google News for your town. Forecaster reports come straight from the National Weather Service.</p>
+      </div>
+    </section>
   </main>
 
   <nav class="tabbar" aria-label="Sections">
@@ -468,6 +496,7 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
       <button class="tab" role="tab" data-v="alerts" aria-selected="false"><i>⚠</i><span>Alerts</span><b class="badge" id="bdg-alerts" hidden></b></button>
       <button class="tab" role="tab" data-v="power" aria-selected="false"><i>⚡</i><span>Power</span><b class="badge" id="bdg-power" hidden></b></button>
       <button class="tab" role="tab" data-v="roads" aria-selected="false"><i>⛟</i><span>Roads</span><b class="badge" id="bdg-roads" hidden></b></button>
+      <button class="tab" role="tab" data-v="news" aria-selected="false"><i>📰</i><span>News</span><b class="badge" id="bdg-news" hidden></b></button>
     </div>
   </nav>
 </div>
@@ -479,7 +508,7 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
    If the map library couldn't load (e.g. opened with no signal before it was ever saved),
    keep the tabs, phone numbers and safety tips working instead of a dead screen. */
 if(typeof L === "undefined"){
-  const views = ["radar","forecast","alerts","power","roads"];
+  const views = ["radar","forecast","alerts","power","roads","news"];
   const go = v => { document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.v === v))); views.forEach(id => document.getElementById("v-"+id).hidden = id !== v); };
   document.querySelectorAll(".tab").forEach(t => t.onclick = () => go(t.dataset.v));
   const off = !navigator.onLine;
@@ -958,8 +987,10 @@ async function refreshForecast(){
   try{
     if(!pointsMeta || pointsMeta.key !== h.lat+","+h.lon){
       const p = await getJSON(`${NWS}/points/${h.lat.toFixed(4)},${h.lon.toFixed(4)}`);
+      const rl = p.properties.relativeLocation && p.properties.relativeLocation.properties;
       pointsMeta = {key:h.lat+","+h.lon, hourly:p.properties.forecastHourly, daily:p.properties.forecast, stations:p.properties.observationStations,
-        place: p.properties.relativeLocation && p.properties.relativeLocation.properties.city};
+        place: rl && rl.city, state: rl && rl.state, cwa: p.properties.cwa || p.properties.gridId};
+      refreshNews();
     }
     const [hr, dy] = await Promise.all([getJSON(pointsMeta.hourly), getJSON(pointsMeta.daily).catch(() => null)]);
     const hours = hr.properties.periods;
@@ -1447,8 +1478,114 @@ function syncFs(){
 document.addEventListener("fullscreenchange", syncFs);
 $("btnFull").onclick = () => setFs(!isFs());
 
+/* ---------- local weather news ---------- */
+// Local TV/radio weather teams, keyed by the NWS forecast office covering the user's home.
+// Add other offices here as people in other regions start using the app.
+const LOCAL_MEDIA = {
+  GSP: [ // Greenville-Spartanburg office: western NC mountains + Upstate SC
+    {name:"WLOS News 13", note:"ABC · Asheville", url:"https://wlos.com/weather"},
+    {name:"FOX Carolina", note:"FOX · Greenville / Asheville", url:"https://www.foxcarolina.com/weather/"},
+    {name:"WYFF News 4", note:"NBC · Greenville", url:"https://www.wyff4.com/weather"},
+    {name:"7News WSPA", note:"CBS · Spartanburg", url:"https://www.wspa.com/weather/"},
+    {name:"Blue Ridge Public Radio", note:"NPR · Asheville", url:"https://www.bpr.org/", go:"News"},
+  ],
+};
+function linkCard(name, note, url, go){
+  const a = el("a","card media"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.style.setProperty("--c","var(--accent)");
+  a.append(el("span","mname",name), el("span","mnote",note), el("span","mgo",(go || "Open") + " ↗"));
+  return a;
+}
+// NWS text products come wrapped at ~66 characters; rejoin lines into readable paragraphs
+function unwrap(t){ return t.replace(/\r/g,"").split(/\n\s*\n/).map(p => p.replace(/\s*\n\s*/g," ").trim()).filter(Boolean).join("\n\n"); }
+async function nwsProduct(type, office){
+  const j = await getJSON(`${NWS}/products/types/${type}/locations/${office}`);
+  const g = (j["@graph"] || []).sort((a, b) => new Date(b.issuanceTime) - new Date(a.issuanceTime))[0];
+  if(!g) return null;
+  const pr = await getJSON(`${NWS}/products/${g.id}`);
+  return {text: pr.productText || "", issued: new Date(pr.issuanceTime || g.issuanceTime)};
+}
+function afdLead(text){
+  // prefer Key Messages, then Synopsis, then the first section
+  const body = text.replace(/\r/g,"");
+  for(const head of ["KEY MESSAGES","SYNOPSIS","WHAT HAS CHANGED","DISCUSSION"]){
+    const m = body.match(new RegExp("\\n\\." + head + "[^\\n]*?\\.\\.\\.\\s*([\\s\\S]*?)(?:\\n&&|\\n\\.[A-Z][A-Z /]+\\.\\.\\.)"));
+    if(m && m[1].trim()) return {head: head.charAt(0) + head.slice(1).toLowerCase(), text: unwrap(m[1])};
+  }
+  return null;
+}
+function hwoLead(text){
+  const m = text.replace(/\r/g,"").match(/\.DAY ONE[^\n]*\n([\s\S]*?)(?:\n\.DAYS? TWO|\n\.SPOTTER|\n\$\$|$)/);
+  return m ? unwrap(m[1]) : null;
+}
+function prodCard(title, when, lead, full, link){
+  const c = el("div","card nwsprod"); c.style.setProperty("--c","var(--yellow)");
+  c.append(el("div","mid",title), el("div","when","Issued " + when.toLocaleString([], {weekday:"short", hour:"numeric", minute:"2-digit"})));
+  if(lead) c.append(el("div","lead",lead.length > 900 ? lead.slice(0, 900).replace(/\s\S*$/,"") + "…" : lead));
+  const d = el("details"); d.append(el("summary",null,"Read the full report"), el("div","full",full)); c.append(d);
+  if(link){ const a = el("a","pwall","Open on weather.gov ↗"); a.href = link; a.target = "_blank"; a.rel = "noopener"; c.append(a); }
+  return c;
+}
+let newsKey = null;
+async function refreshNews(){
+  if(!pointsMeta) return;
+  const office = pointsMeta.cwa, town = pointsMeta.place || "", st = pointsMeta.state || "";
+  const placeLabel = [town, st].filter(Boolean).join(", ");
+  $("newsPlace").textContent = placeLabel ? "near " + placeLabel : "";
+  // stations: curated list for the office, otherwise a search for the user's market
+  const key = office + "|" + placeLabel;
+  if(key !== newsKey){
+    newsKey = key;
+    const box = $("newsMedia"); box.textContent = "";
+    const list = LOCAL_MEDIA[office];
+    if(list) list.forEach(m => box.append(linkCard(m.name, m.note, m.url, m.go || "Weather")));
+    else {
+      box.append(el("div","sub","We don't have a station list for your area yet. These searches find your local TV weather teams:"));
+      const q = encodeURIComponent(`${placeLabel} local TV news weather`);
+      box.append(linkCard("Find local TV weather", "Search for stations serving " + (placeLabel || "your area"), "https://www.google.com/search?q=" + q, "Search"));
+    }
+    const sb = $("newsSearch"); sb.textContent = "";
+    const where = placeLabel || "my area";
+    const row = el("div","linkrow");
+    const mk = (label, url) => { const a = el("a","btnlink",label); a.href = url; a.target = "_blank"; a.rel = "noopener"; return a; };
+    row.append(mk(`📰 ${town || "Local"} weather news`, "https://news.google.com/search?q=" + encodeURIComponent(`${where} weather when:2d`) + "&hl=en-US&gl=US&ceid=US:en"),
+               mk("⚡ Storm damage & outages", "https://news.google.com/search?q=" + encodeURIComponent(`${where} storm OR flooding OR outage when:2d`) + "&hl=en-US&gl=US&ceid=US:en"),
+               mk("▶ Live local weather video", "https://www.youtube.com/results?search_query=" + encodeURIComponent(`${where} weather live`)));
+    sb.append(row, el("div","sub","Opens Google News or YouTube, filtered to the last two days for " + where + "."));
+  }
+  // forecaster reports from the local NWS office
+  const nb = $("newsNws");
+  if(!office){ nb.textContent = ""; nb.append(el("div","empty","Forecaster reports are only available for U.S. locations.")); return; }
+  try{
+    const [off, afd, hwo] = await Promise.all([
+      getJSON(`${NWS}/offices/${office}`).catch(() => null),
+      nwsProduct("AFD", office).catch(() => null),
+      nwsProduct("HWO", office).catch(() => null)]);
+    const offName = off && off.name ? off.name : office;
+    $("nwsOffice").textContent = offName;
+    nb.textContent = "";
+    const fresh = x => x && (Date.now() - x.issued) < 36*3.6e6;
+    if(fresh(hwo)){
+      const lead = hwoLead(hwo.text);
+      nb.append(prodCard("Hazardous weather outlook", hwo.issued, lead || "See the full outlook for hazards in your area.", hwo.text.trim(), `https://forecast.weather.gov/product.php?site=${office}&issuedby=${office}&product=HWO`));
+    }
+    if(afd){
+      const lead = afdLead(afd.text);
+      nb.append(prodCard("Forecaster discussion" + (lead ? " · " + lead.head : ""), afd.issued, lead ? lead.text : null, afd.text.trim(), `https://forecast.weather.gov/product.php?site=${office}&issuedby=${office}&product=AFD`));
+    }
+    const home = el("a","card media"); home.href = `https://www.weather.gov/${office.toLowerCase()}/`; home.target = "_blank"; home.rel = "noopener"; home.style.setProperty("--c","var(--line)");
+    home.append(el("span","mname","NWS " + offName), el("span","mnote","Your local National Weather Service office"), el("span","mgo","Website ↗"));
+    nb.append(home);
+    if(!afd && !fresh(hwo)) nb.prepend(el("div","empty","No recent forecaster reports right now."));
+    setStatus("NWS reports", true);
+  }catch(e){
+    nb.textContent = ""; nb.append(el("div","empty","Couldn't load the forecaster reports. Check your signal."));
+    setStatus("NWS reports", false);
+  }
+}
+setInterval(refreshNews, 30*60000);
+
 /* ---------- tabs ---------- */
-const TABS = ["radar","forecast","alerts","power","roads"];
+const TABS = ["radar","forecast","alerts","power","roads","news"];
 let currentTab = "radar";
 function showTab(v){
   if(!TABS.includes(v)) v = "radar";
