@@ -162,6 +162,18 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
 
 /* Footer controls */
 .ctrls{display:flex;flex-wrap:wrap;gap:8px}
+.pwlist{display:grid;gap:8px;margin-top:8px}
+.pwrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.pwrow a.pwmap{font-weight:800;font-size:18px;color:var(--fg);text-decoration:none}
+.pwrow a.pwmap::after{content:" ↗";color:var(--accent)}
+.pwrow .pwarea{grid-column:1/-1;font-size:13px;color:var(--mute)}
+.pwrow a.pwtel{font:600 14px/1.2 var(--mono);color:var(--accent);text-decoration:none;white-space:nowrap;user-select:all}
+.pwall{margin-top:8px;font-weight:700;color:var(--accent)}
+.pwsafe summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.pwsafe summary::-webkit-details-marker{display:none}
+.pwsafe summary .mid::before{content:"▸ ";color:var(--red)}
+.pwsafe[open] summary .mid::before{content:"▾ "}
+.pwsafe ul{margin:8px 0 0;padding-left:20px;display:grid;gap:8px;font-size:15px;line-height:1.45}
 .chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:10px 14px;font-weight:700;font-size:15px;cursor:pointer}
 .chip.on{background:var(--accent);color:#03141c;border-color:var(--accent)}
 .status{display:flex;flex-wrap:wrap;gap:6px 12px;font:500 12px/1.4 var(--mono);color:var(--mute)}
@@ -245,6 +257,27 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
       <section class="sec">
         <h2>Alerts for home <span id="alertMeta"></span></h2>
         <div class="list" id="alerts"><div class="empty">Checking NWS…</div></div>
+      </section>
+
+      <section class="sec" id="powerSec">
+        <h2>Power outages <span>live utility maps</span></h2>
+        <div class="card pw" style="--c:var(--yellow)">
+          <div class="mid">Is your power out?</div>
+          <div class="sub">Utilities don't publish live outage counts in a form this app can read, so tap your provider's live map. Not sure who your provider is? It's the name on your power bill.</div>
+          <div class="pwlist" id="pwList"></div>
+          <a class="pwall" href="https://www.readync.gov/stay-informed/power-outages" target="_blank" rel="noopener">All NC utilities (ReadyNC) ↗</a>
+        </div>
+        <details class="card pwsafe" style="--c:var(--red)">
+          <summary><span class="mid">Outage safety</span><span class="sub">Generators, downed lines, food</span></summary>
+          <ul>
+            <li><b>Generators outside only.</b> Never run one in a house, garage, basement or shed, even with doors open. Keep it at least 20 ft from windows and doors. Carbon monoxide has no smell; headache, dizziness or nausea means get everyone outside and call 911.</li>
+            <li><b>Have a working CO alarm</b> with fresh batteries on every sleeping floor.</li>
+            <li><b>Treat every downed line as live.</b> Stay 35 ft away, never drive over one, and report it to your utility.</li>
+            <li><b>Never backfeed</b> a generator into a wall outlet. It can kill a lineworker down the road; use a transfer switch.</li>
+            <li><b>Food:</b> a closed fridge stays cold about 4 hours, a full freezer about 48. Toss perishables that sat above 40°F for more than 2 hours.</li>
+            <li><b>Medical devices:</b> if someone depends on oxygen or other powered equipment and power will be out long, go to a shelter or hospital early, not at the last minute.</li>
+          </ul>
+        </details>
       </section>
 
       <section class="sec">
@@ -1129,6 +1162,25 @@ $("btnPanel").onclick = () => setPanel($("console").closest(".main").classList.c
 })();
 setPanel(load("sw_panel", true));
 window.addEventListener("resize", () => map.invalidateSize());
+
+/* ---------- power outages ---------- */
+const UTILITIES = [
+  {name:"Duke Energy", area:"Asheville and most of Buncombe & Henderson", map:"https://outagemap.duke-energy.com/#/current-outages/ncsc", tel:"800-769-3766", tel2:"800-419-6356"},
+  {name:"French Broad EMC", area:"Madison, Yancey, Mitchell & north Buncombe", map:"https://www.frenchbroademc.com/index.php/projects/outage-info/", tel:"828-649-2051"},
+  {name:"Haywood EMC", area:"Haywood, Jackson, Macon & parts of Transylvania", map:"https://haywoodemc.com/outage-information", tel:"800-951-6088"},
+  {name:"Rutherford EMC", area:"Rutherford, Polk, McDowell & Cleveland", map:"https://outages.ncelectriccooperatives.com/outages/maps", tel:"800-521-0920"},
+  {name:"Blue Ridge Energy", area:"Avery, Watauga, Ashe & Caldwell", map:"https://outages.ncelectriccooperatives.com/outages/maps", tel:"800-448-2383"},
+];
+(function renderPower(){
+  const box = $("pwList");
+  for(const u of UTILITIES){
+    const r = el("div","pwrow");
+    const a = el("a","pwmap",u.name); a.href = u.map; a.target = "_blank"; a.rel = "noopener";
+    const t = el("a","pwtel","📞 "+u.tel); t.href = "tel:"+u.tel.replace(/-/g,""); t.title = "Report an outage";
+    r.append(a, t, el("div","pwarea", u.area + (u.tel2 ? ` · Duke Energy Progress: ${u.tel2}` : "")));
+    box.append(r);
+  }
+})();
 
 /* ---------- schedule ---------- */
 function refreshAll(){ refreshRadar(); refreshCells(); refreshAlerts(); refreshForecast(); refreshRiver(); refreshTropical(); refreshRoads(); }
