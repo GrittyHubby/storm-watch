@@ -61,9 +61,9 @@ button{font:inherit;color:inherit}
 }
 .tabbar{flex:none;background:var(--panel);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;z-index:900}
 .tabin{display:flex;gap:4px;width:100%;max-width:760px}
-.tab{position:relative;flex:1 1 0;min-width:0;border:0;background:transparent;border-radius:12px;padding:8px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--mute)}
-.tab i{font-style:normal;font-size:22px;line-height:1}
-.tab span{font-size:12.5px;font-weight:800;letter-spacing:.02em}
+.tab{position:relative;flex:1 1 0;min-width:0;border:0;background:transparent;border-radius:12px;padding:8px 1px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--mute)}
+.tab i{font-style:normal;font-size:21px;line-height:1}
+.tab span{font-size:clamp(10.5px,2.75vw,12.5px);font-weight:800;letter-spacing:0}
 .tab[aria-selected="true"]{background:var(--panel2);color:var(--fg)}
 .tab[aria-selected="true"] i{color:var(--accent)}
 .tab:focus-visible{outline:3px solid var(--yellow);outline-offset:-3px}
@@ -110,6 +110,25 @@ button{font:inherit;color:inherit}
 .nwsprod details summary{margin-top:6px}
 .nwsprod .full{white-space:pre-wrap;font:14px/1.5 var(--mono);color:var(--fg);max-height:55vh;overflow:auto;margin-top:8px;background:var(--panel2);border-radius:8px;padding:10px}
 .tab span{white-space:nowrap}
+.kitbar{height:12px;border-radius:6px;background:var(--panel2);overflow:hidden}
+.kitbar i{display:block;height:100%;width:0;background:var(--green);transition:width .3s}
+.kitgrp{margin-top:10px}
+.kitgrp > b{display:block;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin:8px 0 4px}
+.kititem{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.kititem input{width:24px;height:24px;margin:1px 0 0;accent-color:var(--green)}
+.kititem span{font-size:16px;line-height:1.35}
+.kititem small{display:block;color:var(--mute);font-size:13.5px;margin-top:2px}
+.kititem.done span{color:var(--mute)}
+.kititem.done span > b{text-decoration:line-through}
+.guide summary{cursor:pointer;list-style:none;display:grid;gap:2px;color:var(--fg);margin-top:0;font-weight:400}
+.guide summary .sub{font-weight:500}
+.guide summary::-webkit-details-marker{display:none}
+.guide summary .mid::before{content:"▸ ";color:var(--c)}
+.guide[open] summary .mid::before{content:"▾ "}
+.guide ul{margin:10px 0 2px;padding-left:20px;display:grid;gap:8px;font-size:15.5px;line-height:1.45}
+.readynow{border-left-width:8px}
+.readynow .big{font-size:clamp(22px,6vw,28px)}
+.readynow ul{margin:6px 0 0;padding-left:20px;display:grid;gap:6px;font-size:16px;line-height:1.4}
 .rays .mid{color:var(--accent)}
 
 /* Map overlays *//* Map overlays */
@@ -425,6 +444,30 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
       </div>
     </section>
 
+    <section class="view page" id="v-ready" aria-label="Get ready" hidden>
+      <div class="pagein">
+        <div id="readyNow"></div>
+        <section class="sec">
+          <h2>Your emergency kit <span id="kitMeta"></span></h2>
+          <div class="card kit" style="--c:var(--green)">
+            <div class="kitbar"><i id="kitFill"></i></div>
+            <div class="sub" id="kitSub">Tick items off as you gather them. Your list is saved on this phone.</div>
+            <div id="kitList"></div>
+            <button class="chip" id="kitReset">Clear my checklist</button>
+          </div>
+        </section>
+        <section class="sec">
+          <h2>What to do <span>tap a topic</span></h2>
+          <div class="list" id="readyGuides"></div>
+        </section>
+        <section class="sec">
+          <h2>Help &amp; official guidance</h2>
+          <div class="list" id="readyLinks"></div>
+        </section>
+        <p class="fine">Guidance follows Ready.gov, ReadyNC, the National Weather Service and the CDC. In an emergency, call 911.</p>
+      </div>
+    </section>
+
     <section class="view page" id="v-power" aria-label="Power outages" hidden>
       <div class="pagein">
         <section class="sec" id="powerSec">
@@ -494,6 +537,7 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
       <button class="tab" role="tab" data-v="radar" aria-selected="true"><i>◉</i><span>Radar</span><b class="badge" id="bdg-radar" hidden></b></button>
       <button class="tab" role="tab" data-v="forecast" aria-selected="false"><i>☀</i><span>Forecast</span><b class="badge" id="bdg-forecast" hidden></b></button>
       <button class="tab" role="tab" data-v="alerts" aria-selected="false"><i>⚠</i><span>Alerts</span><b class="badge" id="bdg-alerts" hidden></b></button>
+      <button class="tab" role="tab" data-v="ready" aria-selected="false"><i>🎒</i><span>Ready</span><b class="badge" id="bdg-ready" hidden></b></button>
       <button class="tab" role="tab" data-v="power" aria-selected="false"><i>⚡</i><span>Power</span><b class="badge" id="bdg-power" hidden></b></button>
       <button class="tab" role="tab" data-v="roads" aria-selected="false"><i>⛟</i><span>Roads</span><b class="badge" id="bdg-roads" hidden></b></button>
       <button class="tab" role="tab" data-v="news" aria-selected="false"><i>📰</i><span>News</span><b class="badge" id="bdg-news" hidden></b></button>
@@ -508,7 +552,7 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
    If the map library couldn't load (e.g. opened with no signal before it was ever saved),
    keep the tabs, phone numbers and safety tips working instead of a dead screen. */
 if(typeof L === "undefined"){
-  const views = ["radar","forecast","alerts","power","roads","news"];
+  const views = ["radar","forecast","alerts","ready","power","roads","news"];
   const go = v => { document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.v === v))); views.forEach(id => document.getElementById("v-"+id).hidden = id !== v); };
   document.querySelectorAll(".tab").forEach(t => t.onclick = () => go(t.dataset.v));
   const off = !navigator.onLine;
@@ -867,6 +911,7 @@ function drawAlerts(){
 }
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function renderAlerts(){
+  if(typeof renderReadyNow === "function") try{ renderReadyNow(); }catch(e){}
   const box = $("alerts"); box.textContent = "";
   $("alertMeta").textContent = S.homeAlerts.length ? S.homeAlerts.length+" active" : "";
   const topRank = S.homeAlerts.length ? Math.min(...S.homeAlerts.map(a => alertRank(a.event))) : 99;
@@ -1584,8 +1629,144 @@ async function refreshNews(){
 }
 setInterval(refreshNews, 30*60000);
 
+/* ---------- get ready ---------- */
+const KIT = [
+  ["Water & food", [
+    ["water", "Water: 1 gallon per person per day", "At least 3 days' worth; 2 weeks if you can. Don't forget pets."],
+    ["well", "On a well? Fill the bathtub and jugs", "No power means no pump. Tub water is for flushing; jugs for drinking."],
+    ["food", "3+ days of food that needs no cooking", "Plus a manual can opener."],
+    ["petfood", "Pet food, water and medicine", null],
+  ]],
+  ["Health", [
+    ["meds", "7-day supply of every prescription", "Refill early. Keep a written list of medications and doses."],
+    ["insulin", "Plan for medicines that need cold", "Most insulin keeps at room temperature for about a month; check your label. Never let it freeze."],
+    ["medpower", "Backup power for oxygen or other medical devices", "Spare batteries, or a plan to go somewhere with power early."],
+    ["firstaid", "First aid kit", null],
+  ]],
+  ["Power & light", [
+    ["lights", "Flashlights and extra batteries", "Avoid candles; they're a fire risk."],
+    ["radio", "Battery or hand-crank NOAA weather radio", "Works when cell service doesn't."],
+    ["powerbank", "Phones and power banks fully charged", "Plus a car charger."],
+    ["coalarm", "Working carbon monoxide alarm on every sleeping floor", null],
+    ["genfuel", "Generator? Fresh fuel stored safely outside the house", "Outdoor-rated extension cords. Never run it indoors or in a garage."],
+  ]],
+  ["Car & cash", [
+    ["gas", "Gas tank at least half full", "Gas pumps need power too."],
+    ["cash", "Some cash in small bills", "Card readers and ATMs go down with the power."],
+    ["carkit", "Car kit: water, blanket, flashlight, first aid, charger", null],
+  ]],
+  ["Home & papers", [
+    ["docs", "IDs, insurance and medical papers in a waterproof bag", "Or photos of them saved to the cloud."],
+    ["freezer", "Freezer and fridge turned to their coldest setting", "Freeze jugs of water to keep food cold longer."],
+    ["outdoor", "Outdoor furniture and trash cans secured", null],
+    ["shutoff", "Know how to shut off water, power and gas", null],
+    ["contact", "Out-of-area contact everyone in the family can text", "Texts often get through when calls don't."],
+  ]],
+];
+const GUIDES = [
+  {id:"flood", color:"var(--green)", title:"Flooding & landslides", sub:"The mountains' biggest risk", items:[
+    "<b>Turn around, don't drown.</b> Six inches of moving water can knock you down; a foot of moving water can carry away most cars. Never drive into water or around a barricade.",
+    "In a <b>Flash Flood Warning</b>, get to higher ground now. Mountain creeks can rise several feet in minutes, even where it isn't raining.",
+    "<b>Landslide signs:</b> rumbling, cracking trees, tilting poles, sudden muddy water in a creek. Leave steep slopes and stream channels immediately.",
+    "Don't camp or park along creeks during heavy rain, and never walk through floodwater: it hides debris, sewage and live wires.",
+  ]},
+  {id:"power", color:"var(--yellow)", title:"Power outages", sub:"Generators, food, water", items:[
+    "<b>Generators outside only</b>, 20 feet from doors and windows. Headache, dizziness or nausea means get everyone outside and call 911.",
+    "Keep the fridge and freezer closed. A closed fridge stays cold about 4 hours; a full freezer about 48.",
+    "Unplug electronics to protect them from the surge when power returns. Leave one lamp on so you'll know it's back.",
+    "On a well, ration stored water: drinking first, then cooking, then flushing.",
+    "Report your outage to your utility. The Power tab has the maps and phone numbers.",
+  ]},
+  {id:"wind", color:"var(--red)", title:"Tornadoes & high wind", sub:"Where to shelter", items:[
+    "<b>Tornado Warning:</b> go to the lowest floor, in an interior room away from windows. Cover your head; wear shoes.",
+    "In a mobile home, leave for a sturdier building before the storm arrives.",
+    "In high wind, stay away from windows and out from under big trees. In the mountains, falling trees cause most wind deaths.",
+    "When thunder roars, go indoors, and wait 30 minutes after the last thunder before going back out.",
+  ]},
+  {id:"roads", color:"var(--orange)", title:"Roads & travel", sub:"If you must drive", items:[
+    "Check the Roads tab before you leave, and tell someone your route and arrival time.",
+    "Treat a dark traffic signal as an all-way stop.",
+    "Never drive over a downed power line. If one falls on your car, stay inside and call 911.",
+    "If you're stranded, stay with your car, run the engine for heat only in short bursts, and keep the tailpipe clear of snow or mud.",
+  ]},
+  {id:"after", color:"var(--accent)", title:"After the storm", sub:"Cleanup safety", items:[
+    "Stay out of floodwater, and away from downed lines; report them to your utility.",
+    "Photograph damage before you clean up, for insurance.",
+    "Use chainsaws only if you're trained, and never alone. Most post-storm injuries are cleanup injuries.",
+    "If your well flooded, don't drink from it until it's been disinfected and tested. Your county health department can help.",
+    "Throw out food that sat above 40°F for more than 2 hours. When in doubt, throw it out.",
+    "Check on neighbors, especially older people and anyone living alone.",
+  ]},
+];
+const READY_LINKS = [
+  ["NC 211: shelters, food, help", "Dial 2-1-1, free, 24/7, or visit nc211.org", "https://www.nc211.org/"],
+  ["Find an open Red Cross shelter", "redcross.org", "https://www.redcross.org/get-help/disaster-relief-and-recovery-services/find-an-open-shelter.html"],
+  ["ReadyNC", "North Carolina Emergency Management", "https://www.readync.gov/"],
+  ["Ready.gov: build a kit", "FEMA's full checklist", "https://www.ready.gov/kit"],
+  ["NWS weather safety", "Floods, tornadoes, lightning and more", "https://www.weather.gov/safety/"],
+];
+const KITKEY = "sw_kit";
+function renderKit(){
+  const done = new Set(load(KITKEY, []));
+  const box = $("kitList"); box.textContent = "";
+  let total = 0, have = 0;
+  for(const [grp, items] of KIT){
+    const g = el("div","kitgrp"); g.append(el("b",null,grp));
+    for(const [id, label, note] of items){
+      total++; if(done.has(id)) have++;
+      const row = el("label","kititem" + (done.has(id) ? " done" : ""));
+      const cb = el("input"); cb.type = "checkbox"; cb.checked = done.has(id); cb.id = "kit-" + id;
+      cb.onchange = () => { const d = new Set(load(KITKEY, [])); cb.checked ? d.add(id) : d.delete(id); save(KITKEY, [...d]); renderKit(); };
+      const t = el("span"); t.append(el("b",null,label)); if(note) t.append(el("small",null,note));
+      row.append(cb, t); g.append(row);
+    }
+    box.append(g);
+  }
+  $("kitFill").style.width = (have/total*100) + "%";
+  $("kitMeta").textContent = `${have} of ${total} ready`;
+  $("kitSub").textContent = have === total ? "Your kit is complete. Check expiration dates and batteries every few months." : "Tick items off as you gather them. Your list is saved on this phone.";
+}
+$("kitReset").onclick = () => { const b = $("kitReset"); if(b.dataset.armed){ save(KITKEY, []); delete b.dataset.armed; b.textContent = "Clear my checklist"; renderKit(); } else { b.dataset.armed = "1"; b.textContent = "Tap again to clear"; setTimeout(() => { delete b.dataset.armed; b.textContent = "Clear my checklist"; }, 3000); } };
+function renderGuides(){
+  const box = $("readyGuides"); box.textContent = "";
+  for(const g of GUIDES){
+    const d = el("details","card guide"); d.id = "guide-" + g.id; d.style.setProperty("--c", g.color);
+    const s2 = el("summary"); s2.append(el("span","mid",g.title), el("span","sub",g.sub)); d.append(s2);
+    const ul = el("ul"); for(const it of g.items){ const li = el("li"); li.innerHTML = it; ul.append(li); } d.append(ul);
+    box.append(d);
+  }
+  const lb = $("readyLinks"); lb.textContent = "";
+  for(const [name, note, url] of READY_LINKS) lb.append(linkCard(name, note, url, "Open"));
+}
+// "Right now": tailor the top of the tab to whatever alert is active at home
+const NOW_TIPS = [
+  [/Tornado Warning/i, "var(--red)", "Tornado warning: take shelter now", ["Lowest floor, interior room, away from windows.", "Cover your head; put on shoes.", "Mobile home? Get to a sturdier building now if you safely can."], "wind"],
+  [/Flash Flood (Warning|Emergency)/i, "var(--green)", "Flash flood warning: move to higher ground", ["Get away from creeks, streams and low spots now.", "Do not drive through any water on the road.", "Watch for landslides on steep slopes."], "flood"],
+  [/Tornado Watch|Severe Thunderstorm/i, "var(--orange)", "Storms possible: be ready to shelter", ["Pick your shelter spot now: lowest floor, interior room.", "Charge phones; turn on sound alerts in Settings.", "Bring in or tie down outdoor items."], "wind"],
+  [/Flood Watch|Flood Warning/i, "var(--green)", "Flooding possible: prepare now", ["Know your route to higher ground.", "On a well, fill the tub and jugs before the power goes.", "Move cars away from creeks and low spots."], "flood"],
+  [/Hurricane|Tropical Storm/i, "var(--magenta)", "Tropical storm impacts expected", ["Finish your kit below; expect long power outages.", "Fill gas tanks and get cash.", "Plan for flooding and landslides in the mountains."], "flood"],
+  [/Wind|Gale/i, "var(--yellow)", "High winds: expect fallen trees and outages", ["Charge phones and power banks now.", "Stay away from big trees and windows.", "Have your generator and fuel ready, outdoors only."], "power"],
+  [/Winter|Ice|Freez|Snow|Cold/i, "var(--accent)", "Winter weather: prepare for ice and outages", ["Keep a safe backup heat source; never use a grill or generator indoors.", "Drip faucets if pipes may freeze.", "Avoid travel once roads ice over."], "roads"],
+];
+function renderReadyNow(){
+  const box = $("readyNow"); if(!box) return; box.textContent = "";
+  const ev = S.homeAlerts.map(a => a.event).join(" | ");
+  const hit = ev && NOW_TIPS.find(t => t[0].test(ev));
+  setBadge("ready", hit ? 1 : 0, "info");
+  if(!hit) return;
+  const [, color, head, tips, guide] = hit;
+  const c = el("div","card readynow"); c.style.setProperty("--c", color);
+  c.append(el("div","state","Right now"), el("div","big",head));
+  const ul = el("ul"); tips.forEach(t => ul.append(el("li",null,t))); c.append(ul);
+  const more = el("button","chip","More: " + GUIDES.find(g => g.id === guide).title);
+  more.onclick = () => { const d = $("guide-" + guide); d.open = true; d.scrollIntoView({behavior:"smooth", block:"start"}); };
+  c.append(more);
+  box.append(c);
+}
+renderKit(); renderGuides();
+
 /* ---------- tabs ---------- */
-const TABS = ["radar","forecast","alerts","power","roads","news"];
+const TABS = ["radar","forecast","alerts","ready","power","roads","news"];
 let currentTab = "radar";
 function showTab(v){
   if(!TABS.includes(v)) v = "radar";
