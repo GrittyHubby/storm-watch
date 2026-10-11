@@ -49,7 +49,7 @@ button{font:inherit;color:inherit}
 .view{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .page .pagein{max-width:760px;margin:0 auto;padding:16px 16px 28px;display:flex;flex-direction:column;gap:20px}
 .radarlayout{display:flex;flex-direction:column}
-.mapwrap{position:relative;height:max(320px,calc(100dvh - 330px));background:#06090c}
+.mapwrap{position:relative;height:max(320px,calc(100dvh - 300px));background:#06090c}
 #map{position:absolute;inset:0;background:#06090c}
 .radarside{padding:16px;display:flex;flex-direction:column;gap:18px;min-width:0}
 @media (min-width:960px){
@@ -110,6 +110,70 @@ button{font:inherit;color:inherit}
 .nwsprod details summary{margin-top:6px}
 .nwsprod .full{white-space:pre-wrap;font:14px/1.5 var(--mono);color:var(--fg);max-height:55vh;overflow:auto;margin-top:8px;background:var(--panel2);border-radius:8px;padding:10px}
 .tab span{white-space:nowrap}
+/* Calm banner: one slim line when nothing is going on */
+.banner.calm{padding:9px 14px;gap:10px;border-bottom-width:3px}
+.banner.calm .lamp{width:12px;height:12px;box-shadow:0 0 10px var(--sev,var(--green))}
+.banner.calm .txt{display:flex;align-items:baseline;gap:10px;white-space:nowrap;overflow:hidden}
+.banner.calm h1{font-size:clamp(17px,4.6vw,22px);flex:none}
+.banner.calm p{margin:0;font-size:clamp(14px,3.7vw,16px);overflow:hidden;text-overflow:ellipsis;opacity:.85}
+/* Map tools menu */
+.mapmenu{right:10px;bottom:10px;width:min(300px,calc(100% - 20px));z-index:950;background:rgba(13,19,27,.97);border:1px solid var(--line);border-radius:14px;padding:6px;display:grid;gap:4px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.mm{display:flex;align-items:center;gap:12px;border:0;border-radius:10px;background:transparent;padding:10px 10px;text-align:left;cursor:pointer;min-height:56px}
+.mm:hover,.mm:focus-visible{background:var(--panel2)}
+.mm i{font-style:normal;font-size:22px;width:30px;text-align:center;flex:none;font-weight:800}
+.mm b{display:block;font-size:17px}
+.mm small{display:block;color:var(--mute);font-size:13px}
+.mm.on{background:var(--accent);color:#03141c}.mm.on small{color:#03141c}
+.tb[aria-expanded="true"]{background:var(--accent);border-color:var(--accent);color:#03141c}
+.tb[aria-expanded="true"] span{color:#03141c}
+.tab span{font-size:clamp(11.5px,3vw,13.5px)}
+/* More page */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:132px;padding:16px;border-radius:16px;border:1px solid var(--line);background:var(--panel);text-align:left;cursor:pointer}
+.tile:last-child:nth-child(odd){grid-column:1 / -1;min-height:0}
+.tile i{font-style:normal;font-size:32px;line-height:1}
+.tile>b{font-size:20px;font-weight:900;font-stretch:85%;margin-top:6px}
+.tile span{color:var(--mute);font-size:14px;line-height:1.35}
+.tile span.hot{color:var(--yellow);font-weight:700}
+.tile:active{background:var(--panel2)}
+.tile:focus-visible,.back:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.tile .badge{top:12px;right:12px;left:auto;margin:0;font:800 12px/20px var(--mono)}
+.subhead{display:flex;align-items:center;gap:12px;margin:-4px 0 -6px}
+.subhead b{font-size:22px;font-weight:900;font-stretch:80%;text-transform:uppercase;letter-spacing:.02em}
+.back{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:8px 14px;font-weight:800;font-size:15px;cursor:pointer;color:var(--accent)}
+/* Cams */
+.camfilter{grid-template-columns:1fr 1.4fr 1fr;margin-bottom:12px}
+.camgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+.camtile{display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;padding:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel);text-align:left;cursor:pointer}
+.camtile:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.camimg{position:relative;aspect-ratio:16/9;background:#06090c linear-gradient(110deg,#0c131b 30%,#141e29 50%,#0c131b 70%);background-size:200% 100%;animation:camshim 1.6s linear infinite}
+.camimg.ok{animation:none;background:#06090c}
+@keyframes camshim{to{background-position:-200% 0}}
+.camimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.camimg .cammsg{position:absolute;inset:0;display:grid;place-items:center;color:var(--mute);font-weight:700;font-size:14px;text-align:center;padding:10px}
+.camage{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.72);color:#fff;font:600 12px var(--mono);padding:3px 7px;border-radius:6px}
+.camlive{position:absolute;left:6px;top:6px;background:var(--red);color:#fff;font:800 11px/1 var(--display);letter-spacing:.06em;padding:4px 6px;border-radius:4px}
+.camalt{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.72);color:#fff;font:800 12px var(--display);padding:2px 6px;border-radius:6px}
+.camalt.high{background:var(--accent);color:#03141c}
+.camcap{padding:8px 10px 10px;display:grid;align-content:start;gap:1px;flex:1}
+.camcap b{font-size:16px;font-weight:800;line-height:1.2}
+.camcap span{color:var(--mute);font-size:13px;line-height:1.3}
+.camrow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 12px;text-decoration:none;color:var(--fg)}
+.camrow .mname{font-size:18px;font-weight:800}
+.camrow .mnote{color:var(--mute);font-size:14px}
+.camrow .mgo{grid-row:1 / span 2;grid-column:2;font-weight:800;color:var(--accent);white-space:nowrap}
+.camview{position:fixed;inset:0;z-index:6000;background:#000;display:flex;flex-direction:column;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px))}
+.camstage{flex:1;min-height:0;position:relative;overflow:auto;border-radius:10px;background:#06090c;display:grid;place-items:center}
+.camstage img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.camstage.zoomed{place-items:start}
+.camstage.zoomed img{max-width:none;max-height:none;width:260%}
+.camstage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.camfoot{display:grid;gap:8px}
+.camcredit{color:var(--mute);font-size:14px}
+.camcredit a{color:var(--accent);font-weight:700}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#03141c}
+@media (prefers-reduced-motion:reduce){.camimg{animation:none}}
+
 .compassview{position:fixed;inset:0;z-index:6000;background:radial-gradient(120% 70% at 50% 35%,#13202d 0%,var(--bg) 65%);display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) 16px calc(14px + env(safe-area-inset-bottom,0px));overflow-y:auto}
 .cvhead{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .cvhead b{display:block;font-size:22px;font-weight:900;font-stretch:80%;text-transform:uppercase;letter-spacing:.02em}
@@ -382,6 +446,12 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
             <label class="lyrow"><span>Color legend</span><input type="checkbox" id="lyLegend"></label>
           </div>
           <div class="ovl modehint" id="modeHint" hidden>Tap the map to set home</div>
+          <div class="ovl mapmenu" id="mapMenu" hidden role="menu" aria-label="Map tools">
+            <button class="mm" id="btnLocate" role="menuitem"><i>◎</i><span><b>Use my GPS</b><small>Make where you are now "home"</small></span></button>
+            <button class="mm" id="btnSetHome" role="menuitem" aria-label="Set home: tap the map"><i>✚</i><span><b>Pin home on the map</b><small>Then tap your spot</small></span></button>
+            <button class="mm" id="btnBase" role="menuitem"><i>▦</i><span><b>Map style</b><small id="baseName">Dark</small></span></button>
+            <button class="mm" id="btnFull" role="menuitem"><i>⛶</i><span><b id="fullLbl">Full screen</b><small>Map fills the whole screen</small></span></button>
+          </div>
         </div>
         <div class="radarbar">
           <button class="play" id="btnPlay" aria-label="Pause radar loop">❚❚</button>
@@ -390,12 +460,9 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
         </div>
         <nav class="toolbar" aria-label="Map tools">
           <button class="tb" id="btnCenter" title="Center on home"><i>⌂</i><span>Home</span></button>
-            <button class="tb" id="btnCompass" title="Storm compass: point your phone at the storm"><i>🧭</i><span>Compass</span></button>
-          <button class="tb" id="btnLocate" title="Use my GPS location"><i>◎</i><span>My GPS</span></button>
-          <button class="tb" id="btnSetHome" title="Tap the map to set home" aria-label="Set home: tap the map"><i>✚</i><span>Pin</span></button>
+          <button class="tb" id="btnCompass" title="Storm compass: point your phone at the storm"><i>🧭</i><span>Compass</span></button>
           <button class="tb" id="btnLayers" title="Map layers"><i>◧</i><span>Layers</span></button>
-          <button class="tb" id="btnBase" title="Change basemap"><i>▦</i><span>Map</span></button>
-          <button class="tb" id="btnFull" title="Full screen"><i>⛶</i><span>Expand</span></button>
+          <button class="tb" id="btnTools" title="More map tools" aria-haspopup="true" aria-expanded="false"><i>⋯</i><span>Tools</span></button>
           <button class="tb zoom" id="btnZoomIn" title="Zoom in"><i>+</i><span>Zoom in</span></button>
           <button class="tb zoom" id="btnZoomOut" title="Zoom out"><i>−</i><span>Zoom out</span></button>
         </nav>
@@ -445,29 +512,12 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
           <h2>French Broad at Asheville <span id="riverMeta"></span></h2>
           <div id="river" class="card"><div class="empty">Loading gauge…</div></div>
         </section>
-        <section class="sec">
-          <h2>Settings</h2>
-          <div class="ctrls">
-            <button class="chip" id="btnSound">🔔 Sound alerts: off</button>
-            <button class="chip" id="btnWake">☀ Keep screen on: off</button>
-            <button class="chip" id="btnRefresh">↻ Refresh now</button>
-          </div>
-          <div class="card install" id="installBox" style="--c:var(--accent)" hidden>
-            <div class="mid">Put Storm Watch on your home screen</div>
-            <div class="sub" id="installText">Opens full screen from its own icon, like a regular app.</div>
-            <button class="chip on" id="btnInstall" hidden>📲 Install Storm Watch</button>
-          </div>
-        </section>
-        <section class="sec">
-          <h2>Data feeds</h2>
-          <div class="status" id="status"></div>
-          <p class="fine">Radar: NEXRAD base reflectivity mosaic via Iowa Environmental Mesonet, 5-min updates. Storm paths: NEXRAD storm-cell motion vectors (SCIT) projected 60 min, plus official NWS warning motion. Projections assume straight-line motion; cells can turn, split or die. Tropical track: latest NHC forecast advisory (TCM) parsed from api.weather.gov. Alerts and forecast: api.weather.gov. Not a substitute for NWS warnings or a NOAA weather radio.</p>
-        </section>
       </div>
     </section>
 
     <section class="view page" id="v-ready" aria-label="Get ready" hidden>
       <div class="pagein">
+        <div class="subhead"><button class="back" data-go="more" aria-label="Back to More">‹ More</button><b>Get ready</b></div>
         <div id="readyNow"></div>
         <section class="sec">
           <h2>Your emergency kit <span id="kitMeta"></span></h2>
@@ -492,8 +542,9 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
 
     <section class="view page" id="v-power" aria-label="Power outages" hidden>
       <div class="pagein">
+        <div class="subhead"><button class="back" data-go="more" aria-label="Back to More">‹ More</button><b>Power outages</b></div>
         <section class="sec" id="powerSec">
-          <h2>Power outages <span>Duke Energy · NC &amp; SC</span></h2>
+          <h2>Live outage map <span>Duke Energy · NC &amp; SC</span></h2>
           <div class="dukewrap">
             <iframe id="dukeMap" src="https://outagemap.duke-energy.com/#/current-outages/ncsc" title="Duke Energy live outage map for North and South Carolina" loading="lazy" referrerpolicy="no-referrer" allow="geolocation"></iframe>
           </div>
@@ -529,6 +580,7 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
 
     <section class="view page" id="v-roads" aria-label="Roads" hidden>
       <div class="pagein">
+        <div class="subhead"><button class="back" data-go="more" aria-label="Back to More">‹ More</button><b>Roads</b></div>
         <section class="sec">
           <h2>Roads near you <span id="roadMeta"></span></h2>
           <div class="list" id="roads"><div class="empty">Checking NCDOT DriveNC…</div></div>
@@ -537,6 +589,7 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
     </section>
     <section class="view page" id="v-news" aria-label="Local weather news" hidden>
       <div class="pagein">
+        <div class="subhead"><button class="back" data-go="more" aria-label="Back to More">‹ More</button><b>Local news</b></div>
         <section class="sec">
           <h2>Local weather coverage <span id="newsPlace"></span></h2>
           <div class="list" id="newsMedia"><div class="empty">Finding your local stations…</div></div>
@@ -550,6 +603,67 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
           <div class="list" id="newsNws"><div class="empty">Loading the latest forecaster reports…</div></div>
         </section>
         <p class="fine">Stations are matched to the National Weather Service office that covers your home spot. Story links search Google News for your town. Forecaster reports come straight from the National Weather Service.</p>
+      </div>
+    </section>
+    <section class="view page" id="v-cams" aria-label="Local webcams" hidden>
+      <div class="pagein">
+        <section class="sec">
+          <h2>Live cameras <span id="camMeta"></span></h2>
+          <div class="seg camfilter" id="camFilter" role="radiogroup" aria-label="Which cameras">
+            <button data-f="all" role="radio" aria-checked="true">All</button><button data-f="high" role="radio" aria-checked="false">Mountaintops</button><button data-f="low" role="radio" aria-checked="false">Towns</button>
+          </div>
+          <div class="camgrid" id="camGrid"></div>
+        </section>
+        <section class="sec">
+          <h2>More cameras <span>open on the owner's site</span></h2>
+          <div class="list" id="camLinks"></div>
+        </section>
+        <p class="fine">Pictures refresh about once a minute while this page is open, nearest cameras first. Compare a mountaintop with a valley to see how low the clouds are. Every camera belongs to its owner; tap one, then "Open on source site" to support them.</p>
+      </div>
+    </section>
+
+    <section class="view page" id="v-more" aria-label="More" hidden>
+      <div class="pagein">
+        <div class="tiles" id="moreTiles">
+          <button class="tile" data-go="ready"><i>🎒</i><b>Get ready</b><span id="ts-ready">Kit checklist & what to do</span><b class="badge" id="bdg-ready" hidden></b></button>
+          <button class="tile" data-go="power"><i>⚡</i><b>Power outages</b><span id="ts-power">Duke live map · co-op phone numbers</span><b class="badge" id="bdg-power" hidden></b></button>
+          <button class="tile" data-go="roads"><i>⛟</i><b>Roads</b><span id="ts-roads">Closures & incidents near you</span><b class="badge" id="bdg-roads" hidden></b></button>
+          <button class="tile" data-go="news"><i>📰</i><b>Local news</b><span id="ts-news">TV weather teams & NWS forecasters</span><b class="badge" id="bdg-news" hidden></b></button>
+          <button class="tile" data-go="settings"><i>⚙</i><b>Settings</b><span id="ts-settings">Sound alerts, screen, install</span><b class="badge" id="bdg-settings" hidden></b></button>
+        </div>
+        <p class="fine">Storm Watch · free for neighbors. Live data from the National Weather Service, NOAA, NCDOT and Duke Energy.</p>
+      </div>
+    </section>
+
+    <section class="view page" id="v-settings" aria-label="Settings" hidden>
+      <div class="pagein">
+        <div class="subhead"><button class="back" data-go="more" aria-label="Back to More">‹ More</button><b>Settings</b></div>
+        <section class="sec">
+          <h2>Alerts &amp; screen</h2>
+          <div class="ctrls">
+            <button class="chip" id="btnSound">🔔 Sound alerts: off</button>
+            <button class="chip" id="btnWake">☀ Keep screen on: off</button>
+            <button class="chip" id="btnRefresh">↻ Refresh now</button>
+          </div>
+          <div class="card install" id="installBox" style="--c:var(--accent)" hidden>
+            <div class="mid">Put Storm Watch on your home screen</div>
+            <div class="sub" id="installText">Opens full screen from its own icon, like a regular app.</div>
+            <button class="chip on" id="btnInstall" hidden>📲 Install Storm Watch</button>
+          </div>
+        </section>
+        <section class="sec">
+          <h2>Home spot</h2>
+          <div class="card" style="--c:var(--accent)">
+            <div class="mid" id="homeLbl">Asheville</div>
+            <div class="sub">Alerts, storm arrival times, forecast, cameras and roads are all figured from this spot.</div>
+            <div class="ctrls" style="margin-top:6px"><button class="chip" id="setGps">◎ Use my GPS</button><button class="chip" id="setPin">✚ Pin it on the map</button></div>
+          </div>
+        </section>
+        <section class="sec">
+          <h2>Data feeds</h2>
+          <div class="status" id="status"></div>
+          <p class="fine">Radar: NEXRAD base reflectivity mosaic via Iowa Environmental Mesonet, 5-min updates. Storm paths: NEXRAD storm-cell motion vectors (SCIT) projected 60 min, plus official NWS warning motion. Projections assume straight-line motion; cells can turn, split or die. Tropical track: latest NHC forecast advisory (TCM) parsed from api.weather.gov. Alerts and forecast: api.weather.gov. Not a substitute for NWS warnings or a NOAA weather radio.</p>
+        </section>
       </div>
     </section>
   </main>
@@ -576,15 +690,26 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
     </div>
   </div>
 
+  <div class="camview" id="camView" hidden role="dialog" aria-modal="true" aria-label="Webcam">
+    <div class="cvhead">
+      <div><b id="camTitle">Camera</b><span id="camSubT"></span></div>
+      <button class="cvx" id="camClose" aria-label="Close camera">✕</button>
+    </div>
+    <div class="camstage" id="camStage"></div>
+    <div class="camfoot">
+      <div class="ctrls" id="camViews"></div>
+      <div class="ctrls" id="camBtns"></div>
+      <div class="camcredit" id="camCredit"></div>
+    </div>
+  </div>
+
   <nav class="tabbar" aria-label="Sections">
     <div class="tabin" role="tablist">
       <button class="tab" role="tab" data-v="radar" aria-selected="true"><i>◉</i><span>Radar</span><b class="badge" id="bdg-radar" hidden></b></button>
       <button class="tab" role="tab" data-v="forecast" aria-selected="false"><i>☀</i><span>Forecast</span><b class="badge" id="bdg-forecast" hidden></b></button>
       <button class="tab" role="tab" data-v="alerts" aria-selected="false"><i>⚠</i><span>Alerts</span><b class="badge" id="bdg-alerts" hidden></b></button>
-      <button class="tab" role="tab" data-v="ready" aria-selected="false"><i>🎒</i><span>Ready</span><b class="badge" id="bdg-ready" hidden></b></button>
-      <button class="tab" role="tab" data-v="power" aria-selected="false"><i>⚡</i><span>Power</span><b class="badge" id="bdg-power" hidden></b></button>
-      <button class="tab" role="tab" data-v="roads" aria-selected="false"><i>⛟</i><span>Roads</span><b class="badge" id="bdg-roads" hidden></b></button>
-      <button class="tab" role="tab" data-v="news" aria-selected="false"><i>📰</i><span>News</span><b class="badge" id="bdg-news" hidden></b></button>
+      <button class="tab" role="tab" data-v="cams" aria-selected="false"><i>📷</i><span>Cams</span><b class="badge" id="bdg-cams" hidden></b></button>
+      <button class="tab" role="tab" data-v="more" aria-selected="false"><i>☰</i><span>More</span><b class="badge" id="bdg-more" hidden></b></button>
     </div>
   </nav>
 </div>
@@ -596,12 +721,14 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
    If the map library couldn't load (e.g. opened with no signal before it was ever saved),
    keep the tabs, phone numbers and safety tips working instead of a dead screen. */
 if(typeof L === "undefined"){
-  const views = ["radar","forecast","alerts","ready","power","roads","news"];
-  const go = v => { document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.v === v))); views.forEach(id => document.getElementById("v-"+id).hidden = id !== v); };
+  const views = ["radar","forecast","alerts","cams","more","ready","power","roads","news","settings"];
+  const subs = ["ready","power","roads","news","settings"];
+  const go = v => { const top = subs.includes(v) ? "more" : v; document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.v === top))); views.forEach(id => document.getElementById("v-"+id).hidden = id !== v); };
   document.querySelectorAll(".tab").forEach(t => t.onclick = () => go(t.dataset.v));
+  document.querySelectorAll("[data-go]").forEach(t => t.onclick = () => go(t.dataset.go));
   const off = !navigator.onLine;
   document.getElementById("bHead").textContent = off ? "You're offline" : "Map couldn't load";
-  document.getElementById("bSub").textContent = (off ? "Reconnect for live radar, alerts and forecast. " : "Check your connection and reopen. ") + "The Power tab's phone numbers still work.";
+  document.getElementById("bSub").textContent = (off ? "Reconnect for live radar, alerts and forecast. " : "Check your connection and reopen. ") + "Power outage phone numbers are under More.";
   document.getElementById("banner").style.setProperty("--sev","var(--mute)");
   window.addEventListener("online", () => location.reload());
   const pw = document.getElementById("pwList");
@@ -710,7 +837,8 @@ function setBasemap(i){
   bmBase.on("tileerror", () => { if(++bmErrors === 12){ map.removeLayer(bmBase);
     bmBase = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:18, attribution:'&copy; OpenStreetMap · Radar &copy; IEM/NWS'}).addTo(map); } });
   bmLabels = b.labels ? L.tileLayer(b.labels, {maxZoom:18, maxNativeZoom:b.nat, pane:"labels"}).addTo(map) : null;
-  const btn = document.getElementById("btnBase"); if(btn){ btn.title = "Basemap: "+b.name; btn.setAttribute("aria-label", "Basemap: "+b.name+". Tap to change"); }
+  const btn = document.getElementById("btnBase"); if(btn){ btn.title = "Basemap: "+b.name; btn.setAttribute("aria-label", "Map style: "+b.name+". Tap to change"); }
+  const bn = document.getElementById("baseName"); if(bn) bn.textContent = b.name + " · tap to change";
 }
 setBasemap(bmIdx);
 
@@ -1031,10 +1159,16 @@ function renderBanner(incoming, near){
   }
   else if(top){ sev = "var(--yellow)"; head = top.event; sub = "Until "+fmtT(new Date(top.ends||top.expires)); }
   else { head = "Nothing headed your way"; sub = near != null ? `Nearest cell ${fmtMi(near)} mi · ${S.cells.length} tracked` : "No storm cells nearby"; }
+  S.lastBanner = [incoming, near];
   const tc = (S.tc || []).filter(t => t.ca.d < 500 && t.ca.t.getTime() > Date.now() - 30*60000).sort((a, b) => a.ca.d - b.ca.d)[0];
   if(tc){ sub += ` · ${tc.name.split(" ").pop()} closest ${fmtMi(tc.ca.d)} mi ${fmtDay(tc.ca.t)}`; if(sev === "var(--green)") sev = "var(--yellow)"; }
   bn.style.setProperty("--sev", sev); bn.classList.toggle("pulse", pulse);
-  $("bHead").textContent = head; $("bSub").textContent = sub + " · updated "+fmtT(new Date());
+  const calm = sev === "var(--green)" && !pulse;
+  bn.classList.toggle("calm", calm);
+  if(calm){
+    $("bHead").textContent = "All clear";
+    $("bSub").textContent = [S.nowLine, near != null ? `nearest storm ${fmtMi(near)} mi` : "no storms nearby"].filter(Boolean).join(" · ");
+  } else { $("bHead").textContent = head; $("bSub").textContent = sub + " · updated "+fmtT(new Date()); }
   $("fsHead").textContent = head; $("fsSub").textContent = sub; $("fsBanner").style.setProperty("--sevc", sev);
   document.title = (pulse ? "⚠ " : "") + "Storm Watch";
 }
@@ -1086,6 +1220,7 @@ async function refreshForecast(){
     renderHourly(hours);
     renderDays(dy ? dy.properties.periods : []);
     $("fcstMeta").textContent = pointsMeta.place ? "near " + pointsMeta.place : "";
+    $("homeLbl").textContent = pointsMeta.place ? `Near ${pointsMeta.place}${pointsMeta.state ? ", " + pointsMeta.state : ""}` : `${S.home.lat.toFixed(3)}, ${S.home.lon.toFixed(3)}`;
     renderNow(null, hours[0], dy ? dy.properties.periods : []);
     refreshObs(hours[0], dy ? dy.properties.periods : []);
     setStatus("forecast", true);
@@ -1116,6 +1251,8 @@ function renderNow(obs, hour0, daily){
   top.append(el("div","nowico",wxIcon(desc, isDay)));
   const t = el("div"); t.append(el("div","nowtemp",tF != null ? tF + "°" : "–"), el("div","nowdesc",desc));
   top.append(t); box.append(top);
+  S.nowLine = (tF != null ? tF + "° " : "") + (desc || "");
+  if(S.lastBanner) renderBanner(...S.lastBanner);
   // today's high / low from the daily forecast
   const dayP = daily.find(p => p.isDaytime), nightP = daily.find(p => !p.isDaytime);
   const hl = [];
@@ -1411,7 +1548,8 @@ $("btnLocate").onclick = () => {
 $("btnSetHome").onclick = () => { $("modeHint").textContent = "Tap the map to set home"; S.setHomeMode = !S.setHomeMode; $("btnSetHome").classList.toggle("on", S.setHomeMode); $("modeHint").hidden = !S.setHomeMode; };
 map.on("click", e => { if(!S.setHomeMode) return; S.setHomeMode = false; $("btnSetHome").classList.remove("on"); $("modeHint").hidden = true; setHome(e.latlng.lat, e.latlng.lng); });
 function setHome(lat, lon){
-  S.home = {lat, lon}; save("sw_home", S.home); pointsMeta = null;
+  S.home = {lat, lon}; save("sw_home", S.home); pointsMeta = null; camHomeKey = null;
+  if(currentTab === "cams") renderCams();
   S.prevCells.clear(); S.alarmedCells.clear();
   drawHome(); map.flyTo([lat, lon], 9); refreshAll();
 }
@@ -1419,9 +1557,13 @@ $("btnSound").onclick = () => {
   S.sound = !S.sound; $("btnSound").classList.toggle("on", S.sound);
   $("btnSound").textContent = "🔔 Sound alerts: "+(S.sound?"on":"off");
   if(S.sound) beep([[880,.15]]);
+  settingsNote();
 };
+function settingsNote(){ tileNote("settings", `Sound alerts ${S.sound ? "on" : "off"} · screen ${S.wakeWanted ? "stays on" : "normal"}`); }
+$("setGps").onclick = () => { showTab("radar"); $("btnLocate").click(); };
+$("setPin").onclick = () => { showTab("radar"); if(!S.setHomeMode) $("btnSetHome").click(); };
 async function wakeOn(){ try{ S.wake = await navigator.wakeLock.request("screen"); S.wake.addEventListener("release", () => { if(S.wakeWanted) setTimeout(wakeOn, 500); }); }catch(e){ S.wakeWanted = false; syncWake(); } }
-function syncWake(){ $("btnWake").classList.toggle("on", !!S.wakeWanted); $("btnWake").textContent = "☀ Keep screen on: "+(S.wakeWanted?"on":"off"); }
+function syncWake(){ $("btnWake").classList.toggle("on", !!S.wakeWanted); $("btnWake").textContent = "☀ Keep screen on: "+(S.wakeWanted?"on":"off"); settingsNote(); }
 $("btnWake").onclick = async () => {
   S.wakeWanted = !S.wakeWanted; syncWake();
   if(S.wakeWanted && "wakeLock" in navigator) await wakeOn();
@@ -1445,7 +1587,14 @@ function applyLayers(){
   document.querySelectorAll("#segCells button").forEach(b => b.setAttribute("aria-checked", String(b.dataset.v === L2.cells)));
   save("sw_layers", L2); drawCells(); drawAlerts(); fitRingLabels();
 }
-function toggleLayers(open){ const p = $("layersPanel"); p.hidden = open === undefined ? !p.hidden : !open; $("btnLayers").classList.toggle("on", !p.hidden); }
+function toggleLayers(open){ const p = $("layersPanel"); p.hidden = open === undefined ? !p.hidden : !open; $("btnLayers").classList.toggle("on", !p.hidden); if(!p.hidden) toggleTools(false); }
+function toggleTools(open){ const m = $("mapMenu"); m.hidden = open === undefined ? !m.hidden : !open; $("btnTools").setAttribute("aria-expanded", String(!m.hidden)); if(!m.hidden) toggleLayers(false); }
+$("btnTools").onclick = e => { e.stopPropagation(); toggleTools(); };
+// GPS, pin and full screen close the menu; map style keeps it open so you can flip through
+for(const id of ["btnLocate","btnSetHome","btnFull"]) $(id).addEventListener("click", () => toggleTools(false));
+$("mapMenu").addEventListener("click", e => e.stopPropagation());
+document.addEventListener("click", e => { if(!$("mapMenu").hidden && !e.target.closest("#mapMenu,#btnTools")) toggleTools(false); });
+map.on("click", () => toggleTools(false));
 $("btnLayers").onclick = () => toggleLayers();
 $("btnLayersClose").onclick = () => toggleLayers(false);
 $("cellPill").onclick = () => { const order = ["mine","all","off"]; S.layers.cells = order[(order.indexOf(S.layers.cells)+1) % 3]; applyLayers(); };
@@ -1455,7 +1604,7 @@ map.on("click", () => toggleLayers(false));
 let zoomTimer = null;
 map.on("zoomend", fitRingLabels);
 map.on("zoomend", () => { clearTimeout(zoomTimer); zoomTimer = setTimeout(() => { drawCells(); drawAlerts(); }, 150); });
-document.addEventListener("keydown", e => { if(e.key === "Escape"){ toggleLayers(false); if(mapcol.classList.contains("fs")) setFs(false); } });
+document.addEventListener("keydown", e => { if(e.key === "Escape"){ toggleLayers(false); toggleTools(false); if(!$("camView").hidden) closeCam(); if(mapcol.classList.contains("fs")) setFs(false); } });
 $("layersPanel").addEventListener("click", e => e.stopPropagation());
 
 /* ---------- roads (NCDOT DriveNC / TIMS, public ArcGIS feature service) ---------- */
@@ -1522,6 +1671,7 @@ function renderRoads(live, work){
   const box = $("roads"); box.textContent = "";
   const closures = live.filter(i => i.closed).length;
   $("roadMeta").textContent = `${live.length} incident${live.length === 1 ? "" : "s"} · ${closures} closed · ${ROAD_MI} mi`;
+  tileNote("roads", closures ? `${closures} road${closures === 1 ? "" : "s"} closed within ${ROAD_MI} mi` : live.length ? `${live.length} incident${live.length === 1 ? "" : "s"}, no closures within ${ROAD_MI} mi` : `All clear within ${ROAD_MI} mi`, closures > 0);
   setBadge("roads", closures, "warn");
   if(!live.length) box.append(el("div","empty",`No active incidents on NC roads within ${ROAD_MI} mi.`));
   live.slice(0, 12).forEach(i => box.append(roadCard(i, false)));
@@ -1560,7 +1710,7 @@ async function setFs(on){
 }
 function syncFs(){
   const on = isFs(), b = $("btnFull");
-  b.classList.toggle("on", on); b.querySelector("span").textContent = on ? "Exit" : "Expand";
+  $("fullLbl").textContent = on ? "Exit full screen" : "Full screen";
   $("fsBanner").hidden = !on;
   setTimeout(() => map.invalidateSize(), 120);
 }
@@ -1665,6 +1815,7 @@ async function refreshNews(){
     home.append(el("span","mname","NWS " + offName), el("span","mnote","Your local National Weather Service office"), el("span","mgo","Website ↗"));
     nb.append(home);
     if(!afd && !fresh(hwo)) nb.prepend(el("div","empty","No recent forecaster reports right now."));
+    tileNote("news", fresh(hwo) && hwoLead(hwo.text) && !/no hazardous weather is expected/i.test(hwo.text) ? "Hazardous weather outlook out · " + fmtT(hwo.issued) : afd ? "Forecaster update " + fmtT(afd.issued) + " · local TV links" : "Local TV weather teams & NWS");
     setStatus("NWS reports", true);
   }catch(e){
     nb.textContent = ""; nb.append(el("div","empty","Couldn't load the forecaster reports. Check your signal."));
@@ -1768,6 +1919,7 @@ function renderKit(){
   }
   $("kitFill").style.width = (have/total*100) + "%";
   $("kitMeta").textContent = `${have} of ${total} ready`;
+  S.kitLine = `Kit: ${have} of ${total} items ready`; readyNote();
   $("kitSub").textContent = have === total ? "Your kit is complete. Check expiration dates and batteries every few months." : "Tick items off as you gather them. Your list is saved on this phone.";
 }
 $("kitReset").onclick = () => { const b = $("kitReset"); if(b.dataset.armed){ save(KITKEY, []); delete b.dataset.armed; b.textContent = "Clear my checklist"; renderKit(); } else { b.dataset.armed = "1"; b.textContent = "Tap again to clear"; setTimeout(() => { delete b.dataset.armed; b.textContent = "Clear my checklist"; }, 3000); } };
@@ -1797,6 +1949,7 @@ function renderReadyNow(){
   const ev = S.homeAlerts.map(a => a.event).join(" | ");
   const hit = ev && NOW_TIPS.find(t => t[0].test(ev));
   setBadge("ready", hit ? 1 : 0, "info");
+  S.readyHit = hit ? hit[2] : null; readyNote();
   if(!hit) return;
   const [, color, head, tips, guide] = hit;
   const c = el("div","card readynow"); c.style.setProperty("--c", color);
@@ -1993,27 +2146,214 @@ $("cvHere").onclick = () => {
   }, () => { $("cvHere").textContent = "📍 Couldn't get your location"; }, {enableHighAccuracy:true, timeout:15000, maximumAge:60000});
 };
 
+/* ---------- local webcams ----------
+   Still pictures that refresh while the Cams page is open (only the tiles on screen, to save data).
+   Cameras belong to their owners: every one is credited and links back to its source. */
+const NPS_CAMS = "https://www.nps.gov/grsm/learn/photosmultimedia/webcams.htm";
+const npsImg = code => ({img:`https://www.nps.gov/featurecontent/ard/webcams/images/${code}.jpg`, full:`https://www.nps.gov/featurecontent/ard/webcams/images/${code}large.jpg`});
+const hp = n => ({img:`https://nchighpeaks.org/cam${n}/up/image.jpg`, page:`https://nchighpeaks.org/cam${n}/cam${n}view.php`});
+const AWX = "https://www.ashevillewx.com/";
+const CAMS = [
+  {id:"mitchell", name:"Mount Mitchell summit", place:"Highest peak in the East", lat:35.7650, lon:-82.2652, ft:6684, every:120,
+   views:[Object.assign({label:"SE · Green Knob"}, hp(8)), Object.assign({label:"NE"}, hp(11)), Object.assign({label:"NNE · Mt Craig"}, hp(9)), Object.assign({label:"NNW"}, hp(4))],
+   credit:"Friends of Mount Mitchell State Park", site:"https://nchighpeaks.org/"},
+  {id:"purchase", name:"Purchase Knob", place:"Smokies, above Maggie Valley", lat:35.5856, lon:-83.0730, ft:5000, every:300,
+   views:[npsImg("grpk")], credit:"National Park Service · Great Smoky Mountains", site:NPS_CAMS},
+  {id:"kuwohi", name:"Kuwohi (Clingmans Dome)", place:"Smokies high point", lat:35.5628, lon:-83.4985, ft:6643, every:300,
+   views:[npsImg("grcd")], credit:"National Park Service · Great Smoky Mountains", site:NPS_CAMS},
+  {id:"newfound", name:"Newfound Gap", place:"US 441 crossing, Smokies", lat:35.6110, lon:-83.4250, ft:5046, every:300,
+   views:[npsImg("gsng")], credit:"National Park Service · Great Smoky Mountains", site:NPS_CAMS},
+  {id:"lookrock", name:"Look Rock", place:"Smokies, Tennessee side", lat:35.6334, lon:-83.9417, ft:2650, every:300,
+   views:[npsImg("grsm")], credit:"National Park Service · Great Smoky Mountains", site:NPS_CAMS},
+  {id:"avl", name:"Downtown Asheville", place:"Grimes Teich Anderson cam", lat:35.5951, lon:-82.5515, ft:2134, alias:"68877bcc97511",
+   page:AWX+"gtadowntownashevillecam", credit:"AshevilleWX camera network · Grimes Teich Anderson"},
+  {id:"sunrise", name:"Asheville sunrise view", place:"Asheville", lat:35.5990, lon:-82.5400, ft:null, alias:"67817414228fc",
+   page:AWX+"asheville-sunrise-live-camera", credit:"AshevilleWX camera network"},
+  {id:"maggie", name:"Maggie Valley", place:"Cabbage Rose cam", lat:35.5180, lon:-83.0970, ft:3020, alias:"cabbagerose",
+   page:AWX+"cabbage-rose-maggie-valley-live-camera", credit:"AshevilleWX camera network · Cabbage Rose"},
+  {id:"wvl", name:"Waynesville valley", place:"Haywood County", lat:35.4887, lon:-82.9887, ft:2700, alias:"6161c3a424fa2",
+   page:AWX+"waynesville-valley-live-camera", credit:"AshevilleWX camera network"},
+  {id:"canton", name:"Downtown Canton", place:"Canton Home & Garden cam", lat:35.5329, lon:-82.8374, ft:2600, alias:"cantonhomeandgardencam",
+   page:AWX+"downtown-canton-nc-live-camera", credit:"AshevilleWX camera network · Canton Home & Garden"},
+  {id:"fletcher", name:"Fletcher", place:"Marthaler Jewelers cam", lat:35.4307, lon:-82.5010, ft:2100, alias:"63653fe1676e1",
+   page:AWX+"marthaler-jewlery-fletcher-nc-live-camera", credit:"AshevilleWX camera network · Marthaler Jewelers"},
+];
+// IPCamLive cameras: a fresh still each minute, plus the owner's live video player
+for(const c of CAMS) if(c.alias){ c.every = 60; c.live = true; c.views = [{img:"https://ipcamlive.com/player/snapshot.php?alias=" + c.alias, page:c.page}]; }
+// Cameras we can only link to (video players on the owner's own site)
+const RC = "https://www.resortcams.com/webcams/";
+const CAM_LINKS = [
+  {name:"Cataloochee ski base", url:RC+"cataloochee/", lat:35.5630, lon:-83.0890, ft:4660, by:"Resortcams"},
+  {name:"Hemphill Bald", url:RC+"cataloochee-hemphill/", lat:35.5546, lon:-83.0963, ft:5540, by:"Resortcams"},
+  {name:"The Swag, above Waynesville", url:RC+"the-swag-waynesville/", lat:35.5700, lon:-83.0450, ft:5000, by:"Resortcams"},
+  {name:"Downtown Waynesville", url:RC+"waynesville/", lat:35.4887, lon:-82.9887, ft:2750, by:"Resortcams"},
+  {name:"Pack Square, Asheville", url:RC+"pack-square/", lat:35.5950, lon:-82.5510, ft:2134, by:"Resortcams"},
+  {name:"Grove Park Inn, Asheville", url:"https://www.earthcam.com/usa/northcarolina/asheville/", lat:35.6206, lon:-82.5420, ft:2400, by:"EarthCam"},
+  {name:"Black Mountain", url:RC+"black-mountain/", lat:35.6179, lon:-82.3212, ft:2400, by:"Resortcams"},
+  {name:"Downtown Brevard", url:RC+"downtown-brevard/", lat:35.2334, lon:-82.7343, ft:2230, by:"Resortcams"},
+  {name:"Chimney Rock", url:RC+"chimney-rock/", lat:35.4390, lon:-82.2460, ft:1100, by:"Resortcams"},
+  {name:"Nantahala Outdoor Center", url:RC+"nantahala-outdoor-center/", lat:35.3320, lon:-83.5880, ft:1730, by:"Resortcams"},
+  {name:"Bryson City train depot", url:RC+"great-smoky-railroad/", lat:35.4290, lon:-83.4470, ft:1740, by:"Resortcams"},
+  {name:"Blowing Rock", url:RC+"blowing-rock/", lat:36.1350, lon:-81.6780, ft:3560, by:"Resortcams"},
+  {name:"Beech Mountain summit", url:RC+"beech-mountain-summit/", lat:36.1950, lon:-81.8810, ft:5506, by:"Resortcams"},
+];
+const HIGH_FT = 4000;
+const CAM = {filter: load("sw_camf", "all"), tiles: new Map(), visible: new Set(), timer: 0, open: null, view: 0, vtimer: 0};
+let camHomeKey = null;
+const fmtFt = ft => ft ? ft.toLocaleString() + " ft" : "";
+function camWhere(c){
+  const xy = toXY(c.lat, c.lon), km = Math.hypot(...xy), d = mi(km);
+  return {d, txt: d < 2 ? "near home" : `${fmtMi(km)} mi ${compass((deg(Math.atan2(xy[0], xy[1])) + 360) % 360)}`};
+}
+function bust(u){ return u + (u.includes("?") ? "&" : "?") + "_=" + Math.floor(Date.now() / 20000); }
+const camObs = "IntersectionObserver" in window ? new IntersectionObserver(es => {
+  for(const e of es){ const id = e.target.dataset.cam; if(e.isIntersecting){ CAM.visible.add(id); camLoad(id); } else CAM.visible.delete(id); }
+}, {root: $("v-cams"), rootMargin: "200px"}) : null;
+function renderCams(){
+  camHomeKey = S.home.lat + "," + S.home.lon;
+  document.querySelectorAll("#camFilter button").forEach(b => b.setAttribute("aria-checked", String(b.dataset.f === CAM.filter)));
+  const keep = c => CAM.filter === "all" || (CAM.filter === "high" ? c.ft >= HIGH_FT : !(c.ft >= HIGH_FT));
+  const grid = $("camGrid"); grid.textContent = ""; if(camObs) camObs.disconnect(); CAM.visible.clear();
+  const list = CAMS.filter(keep).map(c => Object.assign({w: camWhere(c)}, c)).sort((a, b) => a.w.d - b.w.d);
+  for(const c of list){
+    let t = CAM.tiles.get(c.id);
+    if(!t){
+      const b = el("button","camtile"); b.dataset.cam = c.id; b.setAttribute("aria-label", c.name + " camera, tap for full screen");
+      const box = el("div","camimg"), img = el("img"); img.alt = c.name; img.referrerPolicy = "no-referrer"; img.decoding = "async"; img.hidden = true;
+      const age = el("span","camage"), msg = el("div","cammsg"); age.hidden = true; msg.hidden = true;
+      box.append(img, msg, age);
+      if(c.live) box.append(el("span","camlive","LIVE"));
+      if(c.ft) box.append(el("span","camalt" + (c.ft >= HIGH_FT ? " high" : ""), (c.ft >= HIGH_FT ? "⛰ " : "") + fmtFt(c.ft)));
+      const cap = el("div","camcap"), where = el("span");
+      cap.append(el("b",null,c.name), where);
+      b.append(box, cap);
+      b.onclick = () => openCam(c.id);
+      t = {b, box, img, age, msg, where, last: 0, tried: 0, ok: false};
+      CAM.tiles.set(c.id, t);
+    }
+    t.where.textContent = c.w.txt;
+    grid.append(t.b);
+    if(camObs) camObs.observe(t.b); else { CAM.visible.add(c.id); }
+  }
+  if(!list.length) grid.append(el("div","empty","No cameras in this group."));
+  const lb = $("camLinks"); lb.textContent = "";
+  for(const c of CAM_LINKS.filter(keep).map(c => Object.assign({w: camWhere(c)}, c)).sort((a, b) => a.w.d - b.w.d)){
+    const a = el("a","card camrow"); a.href = c.url; a.target = "_blank"; a.rel = "noopener";
+    a.style.setProperty("--c", c.ft >= HIGH_FT ? "var(--accent)" : "var(--line)");
+    a.append(el("span","mname",c.name), el("span","mnote",[c.ft >= HIGH_FT ? "⛰ " + fmtFt(c.ft) : fmtFt(c.ft), c.w.txt, c.by].filter(Boolean).join(" · ")), el("span","mgo","Watch ↗"));
+    lb.append(a);
+  }
+  $("camMeta").textContent = list.length + " nearest first";
+  camTick();
+}
+function camLoad(id, force){
+  const c = CAMS.find(x => x.id === id), t = CAM.tiles.get(id); if(!c || !t) return;
+  const now = Date.now();
+  if(!force && now - t.tried < c.every * 1000) return;
+  t.tried = now;
+  const pre = new Image(); pre.referrerPolicy = "no-referrer";
+  pre.onload = () => { t.img.src = pre.src; t.img.hidden = false; t.ok = true; t.last = Date.now(); t.msg.hidden = true; t.box.classList.add("ok"); camAge(t); };
+  pre.onerror = () => { if(!t.ok){ t.msg.textContent = navigator.onLine ? "Camera offline" : "You're offline"; t.msg.hidden = false; t.box.classList.add("ok"); } camAge(t); };
+  pre.src = bust(c.views[0].img);
+}
+function camAge(t){
+  if(!t.last){ t.age.hidden = true; return; }
+  const m = Math.floor((Date.now() - t.last) / 60000);
+  t.age.hidden = false; t.age.textContent = m < 1 ? "just now" : m + " min ago";
+}
+function camTick(){
+  if(currentTab !== "cams" || document.visibilityState !== "visible") return;
+  for(const id of CAM.visible) camLoad(id);
+  for(const t of CAM.tiles.values()) camAge(t);
+}
+function camsShown(){ if(camHomeKey !== S.home.lat + "," + S.home.lon) renderCams(); else camTick(); }
+setInterval(camTick, 15000);
+document.querySelectorAll("#camFilter button").forEach(b => b.onclick = () => { CAM.filter = b.dataset.f; save("sw_camf", CAM.filter); renderCams(); });
+
+// full-screen viewer
+function openCam(id, view){
+  const c = CAMS.find(x => x.id === id); if(!c) return;
+  CAM.open = c; CAM.view = view || 0;
+  $("camTitle").textContent = c.name;
+  $("camSubT").textContent = [c.place, c.ft ? fmtFt(c.ft) : "", camWhere(c).txt].filter(Boolean).join(" · ");
+  $("camView").hidden = false;
+  camShowStill();
+  clearInterval(CAM.vtimer); CAM.vtimer = setInterval(() => { if(!$("camStage").querySelector("iframe")) camRefreshStill(); }, 30000);
+}
+function camShowStill(){
+  const c = CAM.open, v = c.views[CAM.view], st = $("camStage");
+  st.textContent = ""; st.classList.remove("zoomed");
+  const img = el("img"); img.alt = c.name + (v.label ? " looking " + v.label : ""); img.referrerPolicy = "no-referrer";
+  const msg = el("div","cammsg","Loading…"); st.append(msg, img);
+  img.onload = () => msg.remove(); img.onerror = () => { msg.textContent = "Camera offline right now"; };
+  img.src = bust(v.full || v.img);
+  img.onclick = () => st.classList.toggle("zoomed");
+  // view chips (Mount Mitchell has four directions)
+  const vb = $("camViews"); vb.textContent = "";
+  if(c.views.length > 1) c.views.forEach((x, i) => { const b = el("button","chip" + (i === CAM.view ? " on" : ""), x.label); b.onclick = () => { CAM.view = i; camShowStill(); }; vb.append(b); });
+  const bb = $("camBtns"); bb.textContent = "";
+  if(c.alias){ const b = el("button","chip","▶ Live video"); b.onclick = () => camShowVideo(); bb.append(b); }
+  const z = el("button","chip","🔍 Zoom"); z.onclick = () => st.classList.toggle("zoomed"); bb.append(z);
+  camCredit();
+}
+function camRefreshStill(){ const img = $("camStage").querySelector("img"); if(img && CAM.open){ const v = CAM.open.views[CAM.view]; const n = new Image(); n.referrerPolicy = "no-referrer"; n.onload = () => { img.src = n.src; }; n.src = bust(v.full || v.img); } }
+function camShowVideo(){
+  const c = CAM.open, st = $("camStage"); st.textContent = ""; st.classList.remove("zoomed");
+  const f = el("iframe"); f.src = "https://g1.ipcamlive.com/player/player.php?alias=" + encodeURIComponent(c.alias) + "&autoplay=1";
+  f.title = c.name + " live video"; f.allow = "autoplay; fullscreen"; f.allowFullscreen = true; f.referrerPolicy = "no-referrer";
+  st.append(f);
+  const bb = $("camBtns"); bb.textContent = "";
+  const b = el("button","chip","◼ Back to still picture"); b.onclick = () => camShowStill(); bb.append(b);
+  camCredit();
+}
+function camCredit(){
+  const c = CAM.open, v = c.views[CAM.view], cr = $("camCredit"); cr.textContent = "";
+  cr.append("Camera: " + c.credit + " · ");
+  const a = el("a",null,"Open on source site ↗"); a.href = v.page || c.page || c.site; a.target = "_blank"; a.rel = "noopener"; cr.append(a);
+}
+function closeCam(){ $("camView").hidden = true; $("camStage").textContent = ""; clearInterval(CAM.vtimer); CAM.open = null; }
+$("camClose").onclick = closeCam;
+
 /* ---------- tabs ---------- */
-const TABS = ["radar","forecast","alerts","ready","power","roads","news"];
+var MAIN_TABS = ["radar","forecast","alerts","cams","more"];
+var SUB_TABS = ["ready","power","roads","news","settings"];   // live inside More
+var TABS = MAIN_TABS.concat(SUB_TABS);
 let currentTab = "radar";
 function showTab(v){
   if(!TABS.includes(v)) v = "radar";
-  currentTab = v;
-  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.v === v)));
+  const prev = currentTab; currentTab = v;
+  const top = SUB_TABS.includes(v) ? "more" : v;
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.v === top)));
   for(const id of TABS) $("v-"+id).hidden = id !== v;
+  if(v !== prev) $("v-"+v).scrollTop = 0;
   if(v === "radar") setTimeout(() => map.invalidateSize(), 30);
-  if(v !== "radar") toggleLayers(false);
+  if(v !== "radar"){ toggleLayers(false); toggleTools(false); }
+  if(v === "cams") camsShown();
   try{ history.replaceState(null, "", v === "radar" ? location.pathname + location.search : "#" + v); }catch(e){}
 }
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => { if(t.dataset.v === currentTab) $("v-"+currentTab).scrollTo({top:0, behavior:"smooth"}); else showTab(t.dataset.v); });
+document.querySelectorAll("[data-go]").forEach(t => t.onclick = () => showTab(t.dataset.go));
 $("banner").onclick = () => showTab(S.homeAlerts.length ? "alerts" : "radar");
 $("banner").onkeydown = e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); $("banner").click(); } };
 window.addEventListener("hashchange", () => showTab(location.hash.slice(1) || "radar"));
-function setBadge(tab, n, kind){
+var BADGES = {};
+function paintBadge(tab, n, kind){
   const b = $("bdg-"+tab); if(!b) return;
   b.hidden = !n; b.textContent = n > 99 ? "99+" : String(n || "");
   b.className = "badge" + (kind ? " " + kind : "");
 }
+function setBadge(tab, n, kind){
+  BADGES[tab] = {n: n || 0, kind: kind || ""};
+  paintBadge(tab, n, kind);
+  if(!SUB_TABS.includes(tab)) return;
+  // roll the sub-page badges up onto the More tab, coloured by the most serious one
+  const sev = k => k === "" ? 3 : k === "warn" ? 2 : 1;
+  let total = 0, worst = null;
+  for(const t of SUB_TABS){ const b = BADGES[t]; if(b && b.n){ total += b.n; if(worst === null || sev(b.kind) > sev(worst)) worst = b.kind; } }
+  paintBadge("more", total, worst || "");
+}
+function tileNote(v, text, hot){ const e = $("ts-"+v); if(!e) return; e.textContent = text; e.classList.toggle("hot", !!hot); }
+function readyNote(){ tileNote("ready", S.readyHit ? "Right now: " + S.readyHit : (S.kitLine || "Kit checklist & what to do"), !!S.readyHit); }
 window.addEventListener("resize", () => map.invalidateSize());
 
 /* ---------- power outages ---------- */
