@@ -110,6 +110,27 @@ button{font:inherit;color:inherit}
 .nwsprod details summary{margin-top:6px}
 .nwsprod .full{white-space:pre-wrap;font:14px/1.5 var(--mono);color:var(--fg);max-height:55vh;overflow:auto;margin-top:8px;background:var(--panel2);border-radius:8px;padding:10px}
 .tab span{white-space:nowrap}
+.compassview{position:fixed;inset:0;z-index:6000;background:radial-gradient(120% 70% at 50% 35%,#13202d 0%,var(--bg) 65%);display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) 16px calc(14px + env(safe-area-inset-bottom,0px));overflow-y:auto}
+.cvhead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.cvhead b{display:block;font-size:22px;font-weight:900;font-stretch:80%;text-transform:uppercase;letter-spacing:.02em}
+.cvhead span{font:500 13px var(--mono);color:var(--mute)}
+.cvx{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);font-size:20px;cursor:pointer}
+.cvdialwrap{position:relative;width:min(92vw,420px,52vh);aspect-ratio:1;margin:8px auto 0;flex:none}
+.cvdialwrap svg{width:100%;height:100%;display:block}
+.cvfacing{position:absolute;left:50%;top:-6px;transform:translateX(-50%);color:var(--fg);font-size:18px;line-height:1;z-index:2}
+.cvinfo{display:grid;gap:8px;text-align:center;max-width:520px;margin:6px auto 0;width:100%}
+.cvturn{font:700 15px var(--mono);color:var(--accent);min-height:20px}
+.cvturn.on{color:var(--green)}
+.cvhead2{font-size:clamp(24px,6.5vw,32px);font-weight:900;font-stretch:82%;line-height:1.05;text-wrap:balance}
+.cvsub{font-size:16px;color:var(--fg);opacity:.9;line-height:1.4}
+.cvchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.cvchips button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 11px;font:700 13px var(--mono);cursor:pointer;color:var(--fg)}
+.cvchips button.on{border-color:var(--accent);color:var(--accent)}
+.cvbtns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.cvnote{font-size:12.5px;color:var(--mute);line-height:1.45}
+.cvpulse{animation:cvpulse 1.4s ease-in-out infinite}
+@keyframes cvpulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.cvpulse{animation:none}}
 .kitbar{height:12px;border-radius:6px;background:var(--panel2);overflow:hidden}
 .kitbar i{display:block;height:100%;width:0;background:var(--green);transition:width .3s}
 .kitgrp{margin-top:10px}
@@ -369,6 +390,7 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
         </div>
         <nav class="toolbar" aria-label="Map tools">
           <button class="tb" id="btnCenter" title="Center on home"><i>⌂</i><span>Home</span></button>
+            <button class="tb" id="btnCompass" title="Storm compass: point your phone at the storm"><i>🧭</i><span>Compass</span></button>
           <button class="tb" id="btnLocate" title="Use my GPS location"><i>◎</i><span>My GPS</span></button>
           <button class="tb" id="btnSetHome" title="Tap the map to set home" aria-label="Set home: tap the map"><i>✚</i><span>Pin</span></button>
           <button class="tb" id="btnLayers" title="Map layers"><i>◧</i><span>Layers</span></button>
@@ -531,6 +553,28 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
       </div>
     </section>
   </main>
+
+  <div class="compassview" id="compassView" hidden role="dialog" aria-modal="true" aria-label="Storm compass">
+    <div class="cvhead">
+      <div><b>Storm compass</b><span id="cvFrom">from home</span></div>
+      <button class="cvx" id="cvClose" aria-label="Close compass">✕</button>
+    </div>
+    <div class="cvdialwrap">
+      <div class="cvfacing" aria-hidden="true">▲</div>
+      <svg id="cvDial" viewBox="-160 -160 320 320" role="img" aria-label="Storms around you"></svg>
+    </div>
+    <div class="cvinfo">
+      <div class="cvturn" id="cvTurn">Hold your phone flat, like a compass</div>
+      <div class="cvhead2" id="cvMain">Looking for storms…</div>
+      <div class="cvsub" id="cvSub"></div>
+      <div class="cvchips" id="cvChips"></div>
+      <div class="cvbtns">
+        <button class="chip" id="cvHere">📍 Use where I'm standing</button>
+        <button class="chip" id="cvEnable" hidden>Turn on compass</button>
+      </div>
+      <div class="cvnote" id="cvNote">Phone compasses can be off by 10° or more. Use this to face the right part of the sky, not to aim precisely. Keep it away from cars and metal.</div>
+    </div>
+  </div>
 
   <nav class="tabbar" aria-label="Sections">
     <div class="tabin" role="tablist">
@@ -1764,6 +1808,190 @@ function renderReadyNow(){
   box.append(c);
 }
 renderKit(); renderGuides();
+
+/* ---------- storm compass ----------
+   Puts the storms around you on a dial that turns with your phone, and points at the most important one. */
+const CV = {open:false, heading:null, smooth:null, obs:null, obsLabel:"home", pick:null, targets:[], lastBuzz:0, raf:0, timer:0, listening:false};
+const CV_RANGE_KM = 120/KM_MI;   // dial edge = 120 miles
+function cvBearing(a, b){ // degrees clockwise from true north, a -> b, both [lat, lon]
+  const f1 = rad(a[0]), f2 = rad(b[0]), dl = rad(b[1]-a[1]);
+  return (deg(Math.atan2(Math.sin(dl)*Math.cos(f2), Math.cos(f1)*Math.sin(f2) - Math.sin(f1)*Math.cos(f2)*Math.cos(dl))) + 360) % 360;
+}
+function cvDistKm(a, b){
+  const f1 = rad(a[0]), f2 = rad(b[0]), df = f2-f1, dl = rad(b[1]-a[1]);
+  return 2*6371*Math.asin(Math.sqrt(Math.sin(df/2)**2 + Math.cos(f1)*Math.cos(f2)*Math.sin(dl/2)**2));
+}
+function cvLocal(obs, ll){ // km east/north of the observer
+  return [(ll[1]-obs[1])*111.32*Math.cos(rad(obs[0])), (ll[0]-obs[0])*110.574];
+}
+function cvTargets(){
+  const obs = CV.obs || [S.home.lat, S.home.lon], out = [], now = Date.now();
+  const add = (kind, label, ll, v, color, strength, extra) => {
+    const dist = cvDistKm(obs, ll); if(dist > CV_RANGE_KM*1.6) return;
+    const p = cvLocal(obs, ll), a = v ? analyze(p, v) : null;
+    out.push(Object.assign({kind, label, ll, v, color, strength, dist, bearing: cvBearing(obs, ll), a}, extra || {}));
+  };
+  for(const c of S.cells){
+    const dt = c.a && c.a.t0 ? (now - c.a.t0)/3.6e6 : 0;
+    const ll = fromXY(c.now[0] + c.v[0]*dt, c.now[1] + c.v[1]*dt);
+    const tag = c.tvs ? "tornadic storm" : c.meso ? "rotating storm" : c.dbz >= 55 ? "strong storm" : c.dbz >= 45 ? "storm" : "rain shower";
+    add("cell", tag, ll, c.v, dbzColor(c.dbz), c.dbz + (c.tvs ? 40 : c.meso ? 20 : 0), {mph: c.mph});
+  }
+  for(const w of S.warnStorms){
+    const dt = w.a && w.a.t0 ? (now - w.a.t0)/3.6e6 : 0;
+    add("warn", w.event.replace(/ Warning$/,"") + " (NWS warning)", fromXY(w.now[0] + w.v[0]*dt, w.now[1] + w.v[1]*dt), w.v, "#ffffff", 80, {mph: Math.round(w.kt*1.15078)});
+  }
+  for(const t of (S.tc || [])){
+    if(t.pts && t.pts[0]) add("tc", t.name, t.pts[0].ll, null, "#ff4fd8", 70, {mph: t.moveMph, moveTo: t.moveTo});
+  }
+  // most important first: arriving soonest, then warnings and strong cells that are close
+  const score = t => (t.a && isThreat(t.a) ? 10000 - t.a.eta*10 : 0) + t.strength*3 - mi(t.dist);
+  out.sort((x, y) => score(y) - score(x));
+  return out;
+}
+function cvPrimary(){
+  if(CV.pick){ const t = CV.targets.find(x => x.label + x.kind === CV.pick.key && Math.abs(x.bearing - CV.pick.bearing) < 25); if(t) return t; }
+  return CV.targets.find(t => t.kind !== "cell" || t.strength >= 40 || (t.a && isThreat(t.a))) || CV.targets[0] || null;
+}
+const cvR = km => 22 + 118*Math.sqrt(Math.min(km, CV_RANGE_KM)/CV_RANGE_KM);  // sqrt scale keeps nearby storms readable
+function cvDraw(){
+  const svg = $("cvDial"), h = CV.smooth == null ? 0 : CV.smooth, prim = cvPrimary();
+  const NS = "http://www.w3.org/2000/svg", mk = (tag, attrs, txt) => { const e = document.createElementNS(NS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); if(txt != null) e.textContent = txt; return e; };
+  svg.textContent = "";
+  svg.append(mk("circle", {r:150, fill:"#0b1118", stroke:"#26364a", "stroke-width":2}));
+  const g = mk("g", {transform:`rotate(${-h})`}); svg.append(g);
+  for(const m of [10, 25, 50, 100]){
+    const r = cvR(m/KM_MI);
+    g.append(mk("circle", {r, fill:"none", stroke:"#26364a", "stroke-width":1.2, "stroke-dasharray":"3 5"}));
+    // distance labels stay put in the lower-right corner while the dial turns
+    svg.append(mk("text", {x:Math.sin(rad(140))*r + 3, y:-Math.cos(rad(140))*r + 3, fill:"#6f8399", "font-size":9, "font-family":"IBM Plex Mono, monospace"}, m + " mi"));
+  }
+  for(let d = 0; d < 360; d += 30){
+    const big = d % 90 === 0, r1 = big ? 136 : 141;
+    g.append(mk("line", {x1:0, y1:-r1, x2:0, y2:-149, stroke: big ? "#eef4fa" : "#55657a", "stroke-width": big ? 2.5 : 1.5, transform:`rotate(${d})`}));
+  }
+  [["N",0,"#ff5a4e"],["E",90,"#eef4fa"],["S",180,"#eef4fa"],["W",270,"#eef4fa"]].forEach(([t, d, col]) => {
+    const x = Math.sin(rad(d))*124, y = -Math.cos(rad(d))*124;
+    g.append(mk("text", {x, y:y+6, fill:col, "font-size":17, "font-weight":900, "text-anchor":"middle", "font-family":"Archivo, sans-serif", transform:`rotate(${h} ${x} ${y})`}, t));
+  });
+  // storms
+  CV.targets.slice(0, 25).reverse().forEach(t => {
+    const r = cvR(t.dist), x = Math.sin(rad(t.bearing))*r, y = -Math.cos(rad(t.bearing))*r, isP = prim && t === prim;
+    if(t.v && Math.hypot(t.v[0], t.v[1]) > 5){ // motion tick: where it's heading
+      const sp = Math.min(22, 6 + Math.hypot(t.v[0], t.v[1])/5), ang = Math.atan2(t.v[0], t.v[1]);
+      g.append(mk("line", {x1:x, y1:y, x2:x + Math.sin(ang)*sp, y2:y - Math.cos(ang)*sp, stroke:t.color, "stroke-width": isP ? 3 : 2, "stroke-linecap":"round", opacity:.9}));
+    }
+    const c = mk("circle", {cx:x, cy:y, r: isP ? 9 : t.kind === "tc" ? 8 : 5.5, fill:t.color, stroke: isP ? "#ffffff" : "#000", "stroke-width": isP ? 3 : 1.5});
+    if(isP) c.setAttribute("class","cvpulse");
+    g.append(c);
+  });
+  if(prim){ // big arrow toward the primary storm
+    const ang = prim.bearing, tip = Math.max(30, cvR(prim.dist) - 16);
+    const arrow = mk("g", {transform:`rotate(${ang})`});
+    arrow.append(mk("line", {x1:0, y1:-12, x2:0, y2:-tip+10, stroke:prim.color, "stroke-width":6, "stroke-linecap":"round"}));
+    arrow.append(mk("path", {d:`M0 ${-tip-4} L-11 ${-tip+14} L11 ${-tip+14} Z`, fill:prim.color, stroke:"#000", "stroke-width":1.5}));
+    g.append(arrow);
+  }
+  svg.append(mk("circle", {r:8, fill:"#4fd3ff", stroke:"#ffffff", "stroke-width":3}));
+  // words
+  const turnEl = $("cvTurn");
+  if(!prim){
+    $("cvMain").textContent = S.cells.length || (S.tc && S.tc.length) ? "No storms within 120 miles" : "Clear in every direction";
+    $("cvSub").textContent = "Nothing on radar near you right now.";
+    turnEl.textContent = CV.heading == null ? "" : "Facing " + compass(h) + " (" + Math.round(h) + "°)"; turnEl.classList.remove("on");
+  } else {
+    const dir = compass(prim.bearing), dmi = fmtMi(prim.dist);
+    $("cvMain").textContent = `${prim.label.charAt(0).toUpperCase() + prim.label.slice(1)} ${dmi} mi to the ${dir}`;
+    const parts = [];
+    if(prim.kind === "tc"){ if(prim.moveTo != null) parts.push(`Moving ${compass(prim.moveTo)} at ${prim.mph} mph.`); }
+    else if(prim.v && Math.hypot(prim.v[0], prim.v[1]) > 5){
+      parts.push(`Moving ${compass(deg(Math.atan2(prim.v[0], prim.v[1])))} at ${Math.round(prim.mph || Math.hypot(prim.v[0], prim.v[1])*KM_MI)} mph.`);
+      const a = prim.a;
+      if(a && a.eta != null && a.eta <= 180) parts.push(a.eta < 1 ? "It's over you now." : `Reaches you around ${fmtT(new Date(a.t0 + a.eta*60000))} (${mins(a.eta - (Date.now()-a.t0)/60000)}).`);
+      else if(a && a.approaching) parts.push(`Closest pass ${fmtMi(a.cpaKm)} mi to your ${compass(a.cpaBearing)} around ${fmtT(new Date(a.t0 + a.cpaMin*60000))}.`);
+      else parts.push("Moving away from you.");
+    }
+    $("cvSub").textContent = parts.join(" ");
+    if(CV.heading == null){ turnEl.textContent = `Face ${dir} (${Math.round(prim.bearing)}°) to look toward it`; turnEl.classList.remove("on"); }
+    else {
+      const rel = ((prim.bearing - h + 540) % 360) - 180;
+      if(Math.abs(rel) <= 12){
+        turnEl.textContent = "✔ You're facing it"; turnEl.classList.add("on");
+        if(Date.now() - CV.lastBuzz > 4000){ CV.lastBuzz = Date.now(); try{ navigator.vibrate && navigator.vibrate(60); }catch(e){} }
+      } else { turnEl.textContent = rel < 0 ? `◀ Turn left ${Math.round(-rel)}°` : `Turn right ${Math.round(rel)}° ▶`; turnEl.classList.remove("on"); }
+    }
+  }
+}
+function cvChips(){
+  const box = $("cvChips"); box.textContent = "";
+  const prim = cvPrimary();
+  CV.targets.slice(0, 5).forEach(t => {
+    const b = el("button", t === prim ? "on" : "", `${compass(t.bearing)} ${fmtMi(t.dist)} mi${t.kind === "warn" ? " ⚠" : t.kind === "tc" ? " 🌀" : ""}`);
+    b.onclick = () => { CV.pick = {key: t.label + t.kind, bearing: t.bearing}; cvChips(); cvDraw(); };
+    box.append(b);
+  });
+}
+function cvRefresh(){ CV.targets = cvTargets(); cvChips(); cvDraw(); }
+function cvOnOrient(e){
+  let hd = null;
+  if(typeof e.webkitCompassHeading === "number" && !isNaN(e.webkitCompassHeading)) hd = e.webkitCompassHeading;            // iPhone
+  else if(e.absolute && typeof e.alpha === "number") hd = 360 - e.alpha;                                                   // Android
+  if(hd == null) return;
+  const so = (screen.orientation && typeof screen.orientation.angle === "number") ? screen.orientation.angle : (window.orientation || 0);
+  hd = ((hd + so) % 360 + 360) % 360;
+  CV.heading = hd;
+  if(CV.smooth == null) CV.smooth = hd;
+  else { const d = ((hd - CV.smooth + 540) % 360) - 180; CV.smooth = (CV.smooth + d*0.25 + 360) % 360; }
+  if(!CV.raf) CV.raf = requestAnimationFrame(() => { CV.raf = 0; if(CV.open) cvDraw(); });
+}
+function cvListen(){
+  if(CV.listening) return;
+  CV.listening = true;
+  if("ondeviceorientationabsolute" in window) window.addEventListener("deviceorientationabsolute", cvOnOrient);
+  else window.addEventListener("deviceorientation", cvOnOrient);
+  setTimeout(() => { if(CV.open && CV.heading == null) $("cvNote").textContent = "No compass found on this device, so the dial is fixed with north at the top. Face the direction shown to look toward the storm."; }, 2500);
+}
+function cvStop(){
+  window.removeEventListener("deviceorientationabsolute", cvOnOrient);
+  window.removeEventListener("deviceorientation", cvOnOrient);
+  CV.listening = false;
+}
+async function cvEnableIOS(){
+  try{
+    const r = await DeviceOrientationEvent.requestPermission();
+    if(r === "granted"){ $("cvEnable").hidden = true; cvListen(); }
+    else $("cvNote").textContent = "Compass access was declined. The dial stays north-up; you can allow it next time you open the compass.";
+  }catch(e){ $("cvEnable").hidden = true; cvListen(); }
+}
+function openCompass(){
+  CV.open = true; CV.heading = null; CV.smooth = null; CV.pick = null;
+  $("compassView").hidden = false;
+  $("cvFrom").textContent = CV.obs ? "from where you're standing" : "from home";
+  const needsAsk = typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function";
+  if(needsAsk){ $("cvEnable").hidden = false; cvEnableIOS(); }   // iPhone: must be asked from this tap
+  else cvListen();
+  cvRefresh();
+  clearInterval(CV.timer); CV.timer = setInterval(cvRefresh, 5000);
+  try{ history.pushState({compass:1}, ""); }catch(e){}
+}
+function closeCompass(fromPop){
+  if(!CV.open) return;
+  CV.open = false; $("compassView").hidden = true; clearInterval(CV.timer); cvStop();
+  if(!fromPop){ try{ if(history.state && history.state.compass) history.back(); }catch(e){} }
+}
+$("btnCompass").onclick = openCompass;
+$("cvClose").onclick = () => closeCompass(false);
+$("cvEnable").onclick = cvEnableIOS;
+window.addEventListener("popstate", () => { if(CV.open) closeCompass(true); });
+document.addEventListener("keydown", e => { if(e.key === "Escape" && CV.open) closeCompass(false); });
+$("cvHere").onclick = () => {
+  if(!navigator.geolocation) return;
+  $("cvHere").textContent = "📍 Finding you…";
+  navigator.geolocation.getCurrentPosition(pos => {
+    CV.obs = [pos.coords.latitude, pos.coords.longitude];
+    $("cvFrom").textContent = "from where you're standing"; $("cvHere").textContent = "📍 Using your current spot"; cvRefresh();
+  }, () => { $("cvHere").textContent = "📍 Couldn't get your location"; }, {enableHighAccuracy:true, timeout:15000, maximumAge:60000});
+};
 
 /* ---------- tabs ---------- */
 const TABS = ["radar","forecast","alerts","ready","power","roads","news"];
