@@ -239,7 +239,7 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
     <nav class="toolbar" aria-label="Map tools">
       <button class="tb" id="btnCenter" title="Center on home"><i>⌂</i><span>Home</span></button>
       <button class="tb" id="btnLocate" title="Use my GPS location"><i>◎</i><span>My GPS</span></button>
-      <button class="tb" id="btnSetHome" title="Tap the map to set home"><i>✚</i><span>Set home</span></button>
+      <button class="tb" id="btnSetHome" title="Tap the map to set home" aria-label="Set home: tap the map"><i>✚</i><span>Pin</span></button>
       <button class="tb" id="btnLayers" title="Map layers"><i>◧</i><span>Layers</span></button>
       <button class="tb" id="btnBase" title="Change basemap"><i>▦</i><span>Map</span></button>
       <button class="tb" id="btnFull" title="Full screen"><i>⛶</i><span>Expand</span></button>
@@ -441,14 +441,28 @@ const lyr = {
   warn: L.layerGroup().addTo(map), cells: L.layerGroup().addTo(map), home: L.layerGroup().addTo(map), roads: L.layerGroup(),
 };
 
+// Hide a ring label when its ring is too small on screen to keep labels from piling up
+function fitRingLabels(){
+  const home = map.latLngToContainerPoint([S.home.lat, S.home.lon]);
+  let lastPx = -Infinity;
+  lyr.rings.eachLayer(l => {
+    if(l._ringMi == null) return;
+    const px = home.distanceTo(map.latLngToContainerPoint(l.getLatLng()));
+    const show = px >= 34 && px - lastPx >= 22;
+    const e = l.getElement(); if(e) e.style.display = show ? "" : "none";
+    if(show) lastPx = px;
+  });
+}
 function drawHome(){
   lyr.home.clearLayers(); lyr.rings.clearLayers();
   const c = [S.home.lat, S.home.lon];
   for(const m of [10,25,50]){
     L.circle(c, {radius:m/KM_MI*1000, color:"#8ea3ba", weight:1.5, opacity:.55, dashArray:"6 8", fill:false, interactive:false}).addTo(lyr.rings);
     const [la, lo] = fromXY(0, m/KM_MI);
-    L.marker([la, lo], {interactive:false, icon:L.divIcon({className:"", html:`<span class="ringlbl">${m} mi</span>`, iconSize:null})}).addTo(lyr.rings);
+    const lbl = L.marker([la, lo], {interactive:false, icon:L.divIcon({className:"", html:`<span class="ringlbl">${m} mi</span>`, iconSize:null})}).addTo(lyr.rings);
+    lbl._ringMi = m;
   }
+  fitRingLabels();
   L.marker(c, {zIndexOffset:2000, icon:L.divIcon({className:"", html:'<div class="home"></div>', iconSize:[26,26], iconAnchor:[13,13]})})
     .bindPopup("<b>Home</b><br>"+S.home.lat.toFixed(3)+", "+S.home.lon.toFixed(3)).addTo(lyr.home);
 }
@@ -1044,7 +1058,7 @@ function applyLayers(){
   $("legend").hidden = !L2.legend;
   $("lyWarn").checked = L2.warn; $("lyTrop").checked = L2.trop; $("lyRings").checked = L2.rings; $("lyLegend").checked = L2.legend; $("lyRoads").checked = L2.roads;
   document.querySelectorAll("#segCells button").forEach(b => b.setAttribute("aria-checked", String(b.dataset.v === L2.cells)));
-  save("sw_layers", L2); drawCells(); drawAlerts();
+  save("sw_layers", L2); drawCells(); drawAlerts(); fitRingLabels();
 }
 function toggleLayers(open){ const p = $("layersPanel"); p.hidden = open === undefined ? !p.hidden : !open; $("btnLayers").classList.toggle("on", !p.hidden); }
 $("btnLayers").onclick = () => toggleLayers();
@@ -1054,6 +1068,7 @@ document.querySelectorAll("#segCells button").forEach(b => b.onclick = () => { S
 for(const [id, k] of [["lyWarn","warn"],["lyTrop","trop"],["lyRings","rings"],["lyLegend","legend"],["lyRoads","roads"]]) $(id).onchange = e => { S.layers[k] = e.target.checked; applyLayers(); };
 map.on("click", () => toggleLayers(false));
 let zoomTimer = null;
+map.on("zoomend", fitRingLabels);
 map.on("zoomend", () => { clearTimeout(zoomTimer); zoomTimer = setTimeout(() => { drawCells(); drawAlerts(); }, 150); });
 document.addEventListener("keydown", e => { if(e.key === "Escape"){ toggleLayers(false); if(mapcol.classList.contains("fs")) setFs(false); } });
 $("layersPanel").addEventListener("click", e => e.stopPropagation());
