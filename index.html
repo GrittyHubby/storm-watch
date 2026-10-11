@@ -163,6 +163,17 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
 /* Footer controls */
 .ctrls{display:flex;flex-wrap:wrap;gap:8px}
 .pwlist{display:grid;gap:8px;margin-top:8px}
+.dukewrap{position:relative;height:min(68vh,560px);border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.dukewrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.dukebar{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.btnlink{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);font-weight:700;text-decoration:none;flex:1 1 auto}
+.btnlink.primary{background:var(--accent);border-color:var(--accent);color:#03141c}
+#powerSec{display:grid;gap:10px}
+#powerSec h2{margin-bottom:0}
+.coops summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.coops summary::-webkit-details-marker{display:none}
+.coops summary .mid::before{content:"▸ ";color:var(--yellow)}
+.coops[open] summary .mid::before{content:"▾ "}
 .pwrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .pwrow a.pwmap{font-weight:800;font-size:18px;color:var(--fg);text-decoration:none}
 .pwrow a.pwmap::after{content:" ↗";color:var(--accent)}
@@ -239,6 +250,39 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
     </div>
 
     <aside class="console" id="console">
+      <section class="sec" id="powerSec">
+        <h2>Power outages <span>Duke Energy · NC &amp; SC</span></h2>
+        <div class="dukewrap">
+          <iframe id="dukeMap" src="https://outagemap.duke-energy.com/#/current-outages/ncsc" title="Duke Energy live outage map for North and South Carolina" loading="lazy" referrerpolicy="no-referrer" allow="geolocation"></iframe>
+        </div>
+        <div class="dukebar">
+          <a class="btnlink primary" href="https://outagemap.duke-energy.com/#/current-outages/ncsc" target="_blank" rel="noopener">Open full screen ↗</a>
+          <a class="btnlink" href="tel:8007693766">📞 Report: 800-769-3766</a>
+        </div>
+        <div class="sub">Map blank or stuck? Tap "Open full screen."</div>
+        <div class="card other" style="--c:var(--line)">
+          <div class="mid">Other areas?</div>
+          <div class="sub">Duke Energy outage maps for Florida, Indiana, Ohio and Kentucky.</div>
+          <a class="pwall" href="https://outagemap.duke-energy.com/#/home" target="_blank" rel="noopener">All Duke Energy outage maps ↗</a>
+        </div>
+        <details class="card coops" style="--c:var(--yellow)">
+          <summary><span class="mid">Not a Duke customer?</span><span class="sub">Local co-ops · it's the name on your power bill</span></summary>
+          <div class="pwlist" id="pwList"></div>
+          <a class="pwall" href="https://www.readync.gov/stay-informed/power-outages" target="_blank" rel="noopener">All NC utilities (ReadyNC) ↗</a>
+        </details>
+        <details class="card pwsafe" style="--c:var(--red)">
+          <summary><span class="mid">Outage safety</span><span class="sub">Generators, downed lines, food</span></summary>
+          <ul>
+            <li><b>Generators outside only.</b> Never run one in a house, garage, basement or shed, even with doors open. Keep it at least 20 ft from windows and doors. Carbon monoxide has no smell; headache, dizziness or nausea means get everyone outside and call 911.</li>
+            <li><b>Have a working CO alarm</b> with fresh batteries on every sleeping floor.</li>
+            <li><b>Treat every downed line as live.</b> Stay 35 ft away, never drive over one, and report it to your utility.</li>
+            <li><b>Never backfeed</b> a generator into a wall outlet. It can kill a lineworker down the road; use a transfer switch.</li>
+            <li><b>Food:</b> a closed fridge stays cold about 4 hours, a full freezer about 48. Toss perishables that sat above 40°F for more than 2 hours.</li>
+            <li><b>Medical devices:</b> if someone depends on oxygen or other powered equipment and power will be out long, go to a shelter or hospital early, not at the last minute.</li>
+          </ul>
+        </details>
+      </section>
+
       <section class="sec" id="tropSec" hidden>
         <h2>Tropical system track <span id="tropMeta"></span></h2>
         <div class="list" id="trop"></div>
@@ -257,27 +301,6 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
       <section class="sec">
         <h2>Alerts for home <span id="alertMeta"></span></h2>
         <div class="list" id="alerts"><div class="empty">Checking NWS…</div></div>
-      </section>
-
-      <section class="sec" id="powerSec">
-        <h2>Power outages <span>live utility maps</span></h2>
-        <div class="card pw" style="--c:var(--yellow)">
-          <div class="mid">Is your power out?</div>
-          <div class="sub">Utilities don't publish live outage counts in a form this app can read, so tap your provider's live map. Not sure who your provider is? It's the name on your power bill.</div>
-          <div class="pwlist" id="pwList"></div>
-          <a class="pwall" href="https://www.readync.gov/stay-informed/power-outages" target="_blank" rel="noopener">All NC utilities (ReadyNC) ↗</a>
-        </div>
-        <details class="card pwsafe" style="--c:var(--red)">
-          <summary><span class="mid">Outage safety</span><span class="sub">Generators, downed lines, food</span></summary>
-          <ul>
-            <li><b>Generators outside only.</b> Never run one in a house, garage, basement or shed, even with doors open. Keep it at least 20 ft from windows and doors. Carbon monoxide has no smell; headache, dizziness or nausea means get everyone outside and call 911.</li>
-            <li><b>Have a working CO alarm</b> with fresh batteries on every sleeping floor.</li>
-            <li><b>Treat every downed line as live.</b> Stay 35 ft away, never drive over one, and report it to your utility.</li>
-            <li><b>Never backfeed</b> a generator into a wall outlet. It can kill a lineworker down the road; use a transfer switch.</li>
-            <li><b>Food:</b> a closed fridge stays cold about 4 hours, a full freezer about 48. Toss perishables that sat above 40°F for more than 2 hours.</li>
-            <li><b>Medical devices:</b> if someone depends on oxygen or other powered equipment and power will be out long, go to a shelter or hospital early, not at the last minute.</li>
-          </ul>
-        </details>
       </section>
 
       <section class="sec">
@@ -1165,7 +1188,6 @@ window.addEventListener("resize", () => map.invalidateSize());
 
 /* ---------- power outages ---------- */
 const UTILITIES = [
-  {name:"Duke Energy", area:"Asheville and most of Buncombe & Henderson", map:"https://outagemap.duke-energy.com/#/current-outages/ncsc", tel:"800-769-3766", tel2:"800-419-6356"},
   {name:"French Broad EMC", area:"Madison, Yancey, Mitchell & north Buncombe", map:"https://www.frenchbroademc.com/index.php/projects/outage-info/", tel:"828-649-2051"},
   {name:"Haywood EMC", area:"Haywood, Jackson, Macon & parts of Transylvania", map:"https://haywoodemc.com/outage-information", tel:"800-951-6088"},
   {name:"Rutherford EMC", area:"Rutherford, Polk, McDowell & Cleveland", map:"https://outages.ncelectriccooperatives.com/outages/maps", tel:"800-521-0920"},
