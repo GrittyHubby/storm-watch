@@ -1,8 +1,8 @@
 /* Storm Watch service worker.
    - The page itself is fetched network-first, so every push reaches installed phones on their next open.
    - If the phone is offline, the last saved copy of the page opens instead of a browser error.
-   - Live data (radar, NWS, roads, Duke) is never cached here: it always comes straight from its source. */
-const SHELL = "sw-shell-v2";
+   - Live data (radar, NWS, roads, Duke, live.json) is never cached here: it always comes straight from its source. */
+const SHELL = "sw-shell-v3";
 const SHELL_FILES = ["./", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 const LIBS = /^https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/leaflet\/1\.9\.4\//;
 
@@ -29,6 +29,8 @@ self.addEventListener("fetch", e => {
     }).catch(() => caches.match("./")));
     return;
   }
+  // which live stream to show: always fresh
+  if(url.origin === self.location.origin && url.pathname.endsWith("/live.json")) return;
   // our own icons/manifest, and the pinned map library: cache first
   if(url.origin === self.location.origin || LIBS.test(req.url)){
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {

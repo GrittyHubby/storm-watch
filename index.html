@@ -173,6 +173,26 @@ button{font:inherit;color:inherit}
 .camcredit a{color:var(--accent);font-weight:700}
 .chip.on{background:var(--accent);border-color:var(--accent);color:#03141c}
 @media (prefers-reduced-motion:reduce){.camimg{animation:none}}
+/* Storm reports */
+.lsrmk{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:14px;line-height:1;border:2px solid #000;box-shadow:0 0 0 2px #fff}
+.lsrmk.old{opacity:.55}
+.lsr{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;cursor:pointer}
+.lsr .lic{font-size:26px;line-height:1.1}
+.lsr .lbody{display:grid;gap:2px;min-width:0}
+.lsr .lhead{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.lsr .lhead b{font-size:18px;font-weight:800;font-stretch:88%}
+.lsr .lhead span{font:600 13px var(--mono);color:var(--mute);white-space:nowrap}
+.lsr .lwhere{color:var(--fg);font-size:15px;font-weight:600}
+.lsr .lrem{color:var(--mute);font-size:15px;line-height:1.4}
+.lsr .lsrc{font:500 12px var(--mono);color:var(--mute);margin-top:2px}
+.lsrmore{justify-self:start}
+/* Live coverage */
+.lvname{font:inherit!important;letter-spacing:inherit!important;text-transform:inherit!important}
+.livevid{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;border:1px solid var(--line)}
+.livechat{position:relative;height:max(420px,58vh);border-radius:12px;overflow:hidden;background:#0f0f0f;border:1px solid var(--line)}
+.livevid iframe,.livechat iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.livevid .empty,.livechat .empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px}
+.linkrow{margin-top:10px}
 
 .compassview{position:fixed;inset:0;z-index:6000;background:radial-gradient(120% 70% at 50% 35%,#13202d 0%,var(--bg) 65%);display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) 16px calc(14px + env(safe-area-inset-bottom,0px));overflow-y:auto}
 .cvhead{display:flex;justify-content:space-between;align-items:center;gap:12px}
@@ -441,6 +461,7 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
             </div>
             <label class="lyrow"><span>Warning boxes &amp; NWS storm tracks</span><input type="checkbox" id="lyWarn"></label>
             <label class="lyrow"><span>Tropical track &amp; cone</span><input type="checkbox" id="lyTrop"></label>
+            <label class="lyrow"><span>Storm reports (trees, flooding, hail)</span><input type="checkbox" id="lyLsr"></label>
             <label class="lyrow"><span>Road closures &amp; incidents (NC)</span><input type="checkbox" id="lyRoads"></label>
             <label class="lyrow"><span>Distance rings</span><input type="checkbox" id="lyRings"></label>
             <label class="lyrow"><span>Color legend</span><input type="checkbox" id="lyLegend"></label>
@@ -507,6 +528,10 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
         <section class="sec">
           <h2>Alerts for home <span id="alertMeta"></span></h2>
           <div class="list" id="alerts"><div class="empty">Checking NWS…</div></div>
+        </section>
+        <section class="sec">
+          <h2>Storm reports near you <span id="lsrMeta"></span></h2>
+          <div class="list" id="lsr"><div class="empty">Checking storm reports…</div></div>
         </section>
         <section class="sec">
           <h2>French Broad at Asheville <span id="riverMeta"></span></h2>
@@ -626,12 +651,30 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
       <div class="pagein">
         <div class="tiles" id="moreTiles">
           <button class="tile" data-go="ready"><i>🎒</i><b>Get ready</b><span id="ts-ready">Kit checklist & what to do</span><b class="badge" id="bdg-ready" hidden></b></button>
+          <button class="tile" data-go="live"><i>📺</i><b>Live coverage</b><span id="ts-live">Live weather stream &amp; chat</span><b class="badge" id="bdg-live" hidden></b></button>
           <button class="tile" data-go="power"><i>⚡</i><b>Power outages</b><span id="ts-power">Duke live map · co-op phone numbers</span><b class="badge" id="bdg-power" hidden></b></button>
           <button class="tile" data-go="roads"><i>⛟</i><b>Roads</b><span id="ts-roads">Closures & incidents near you</span><b class="badge" id="bdg-roads" hidden></b></button>
           <button class="tile" data-go="news"><i>📰</i><b>Local news</b><span id="ts-news">TV weather teams & NWS forecasters</span><b class="badge" id="bdg-news" hidden></b></button>
           <button class="tile" data-go="settings"><i>⚙</i><b>Settings</b><span id="ts-settings">Sound alerts, screen, install</span><b class="badge" id="bdg-settings" hidden></b></button>
         </div>
         <p class="fine">Storm Watch · free for neighbors. Live data from the National Weather Service, NOAA, NCDOT and Duke Energy.</p>
+      </div>
+    </section>
+
+    <section class="view page" id="v-live" aria-label="Live coverage" hidden>
+      <div class="pagein">
+        <div class="subhead"><button class="back" data-go="more" aria-label="Back to More">‹ More</button><b>Live coverage</b></div>
+        <section class="sec">
+          <h2><span class="lvname" id="liveWho">Live stream</span> <span id="liveMeta"></span></h2>
+          <div class="livevid" id="liveVid"></div>
+          <div class="sub" id="liveTitle"></div>
+        </section>
+        <section class="sec">
+          <h2>Live chat <span>anyone can post</span></h2>
+          <div class="livechat" id="liveChat"></div>
+          <div class="linkrow" id="liveLinks"></div>
+          <p class="fine">Chat messages come from the public and nobody checks them. Use them for what neighbors are seeing, not for decisions. For an emergency call 911; for confirmed reports see Storm reports on the Alerts tab. To post, sign in to YouTube in this browser, or tap "Chat in YouTube."</p>
+        </section>
       </div>
     </section>
 
@@ -721,8 +764,8 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
    If the map library couldn't load (e.g. opened with no signal before it was ever saved),
    keep the tabs, phone numbers and safety tips working instead of a dead screen. */
 if(typeof L === "undefined"){
-  const views = ["radar","forecast","alerts","cams","more","ready","power","roads","news","settings"];
-  const subs = ["ready","power","roads","news","settings"];
+  const views = ["radar","forecast","alerts","cams","more","ready","live","power","roads","news","settings"];
+  const subs = ["ready","live","power","roads","news","settings"];
   const go = v => { const top = subs.includes(v) ? "more" : v; document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.v === top))); views.forEach(id => document.getElementById("v-"+id).hidden = id !== v); };
   document.querySelectorAll(".tab").forEach(t => t.onclick = () => go(t.dataset.v));
   document.querySelectorAll("[data-go]").forEach(t => t.onclick = () => go(t.dataset.go));
@@ -844,7 +887,7 @@ setBasemap(bmIdx);
 
 const lyr = {
   rings: L.layerGroup().addTo(map), alerts: L.layerGroup().addTo(map), trop: L.layerGroup().addTo(map),
-  warn: L.layerGroup().addTo(map), cells: L.layerGroup().addTo(map), home: L.layerGroup().addTo(map), roads: L.layerGroup(),
+  warn: L.layerGroup().addTo(map), cells: L.layerGroup().addTo(map), home: L.layerGroup().addTo(map), roads: L.layerGroup(), lsr: L.layerGroup(),
 };
 
 // Hide a ring label when its ring is too small on screen to keep labels from piling up
@@ -1576,14 +1619,14 @@ document.addEventListener("visibilitychange", () => {
 
 /* ---------- map layers ---------- */
 const NARROW = window.matchMedia("(max-width: 700px)").matches;
-S.layers = Object.assign({cells: NARROW ? "mine" : "all", warn:true, trop:true, rings:true, legend:!NARROW, roads:false}, load("sw_layers", {}));
+S.layers = Object.assign({cells: NARROW ? "mine" : "all", warn:true, trop:true, rings:true, legend:!NARROW, roads:false, lsr:true}, load("sw_layers", {}));
 function applyLayers(){
   const L2 = S.layers;
-  for(const [k, g] of [["warn", lyr.alerts], ["warn", lyr.warn], ["trop", lyr.trop], ["rings", lyr.rings], ["roads", lyr.roads]]){
+  for(const [k, g] of [["warn", lyr.alerts], ["warn", lyr.warn], ["trop", lyr.trop], ["rings", lyr.rings], ["roads", lyr.roads], ["lsr", lyr.lsr]]){
     if(L2[k] && !map.hasLayer(g)) g.addTo(map); else if(!L2[k] && map.hasLayer(g)) map.removeLayer(g);
   }
   $("legend").hidden = !L2.legend;
-  $("lyWarn").checked = L2.warn; $("lyTrop").checked = L2.trop; $("lyRings").checked = L2.rings; $("lyLegend").checked = L2.legend; $("lyRoads").checked = L2.roads;
+  $("lyWarn").checked = L2.warn; $("lyTrop").checked = L2.trop; $("lyRings").checked = L2.rings; $("lyLegend").checked = L2.legend; $("lyRoads").checked = L2.roads; $("lyLsr").checked = L2.lsr;
   document.querySelectorAll("#segCells button").forEach(b => b.setAttribute("aria-checked", String(b.dataset.v === L2.cells)));
   save("sw_layers", L2); drawCells(); drawAlerts(); fitRingLabels();
 }
@@ -1599,7 +1642,7 @@ $("btnLayers").onclick = () => toggleLayers();
 $("btnLayersClose").onclick = () => toggleLayers(false);
 $("cellPill").onclick = () => { const order = ["mine","all","off"]; S.layers.cells = order[(order.indexOf(S.layers.cells)+1) % 3]; applyLayers(); };
 document.querySelectorAll("#segCells button").forEach(b => b.onclick = () => { S.layers.cells = b.dataset.v; applyLayers(); });
-for(const [id, k] of [["lyWarn","warn"],["lyTrop","trop"],["lyRings","rings"],["lyLegend","legend"],["lyRoads","roads"]]) $(id).onchange = e => { S.layers[k] = e.target.checked; applyLayers(); };
+for(const [id, k] of [["lyWarn","warn"],["lyTrop","trop"],["lyRings","rings"],["lyLegend","legend"],["lyRoads","roads"],["lyLsr","lsr"]]) $(id).onchange = e => { S.layers[k] = e.target.checked; applyLayers(); };
 map.on("click", () => toggleLayers(false));
 let zoomTimer = null;
 map.on("zoomend", fitRingLabels);
@@ -2146,6 +2189,124 @@ $("cvHere").onclick = () => {
   }, () => { $("cvHere").textContent = "📍 Couldn't get your location"; }, {enableHighAccuracy:true, timeout:15000, maximumAge:60000});
 };
 
+/* ---------- storm reports (NWS Local Storm Reports via IEM) ----------
+   What spotters, emergency managers, 911 centers, road crews and the public have reported to the NWS. */
+const LSR_MI = 75, LSR_HOURS = 48;
+const LSR_KIND = [  // [test on type code / text, icon, colour, short name]
+  [/^T$|TORNADO|FUNNEL/, "🌪", "#ff3b3b", "Tornado"],
+  [/FLASH FLOOD|^F$/, "🌊", "#2f9bff", "Flash flooding"],
+  [/FLOOD|^E$|^v$/, "💧", "#4fd3ff", "Flooding"],
+  [/DEBRIS FLOW|LANDSLIDE|MUD/, "🪨", "#c08a4a", "Landslide"],
+  [/WND DMG|DAMAGE|^D$|^O$/, "🌳", "#ff9a1f", "Wind damage"],
+  [/HAIL|^H$/, "🧊", "#e9f6ff", "Hail"],
+  [/WND GST|WIND|^G$|^N$/, "💨", "#ffd43b", "Wind gust"],
+  [/RAIN|^R$/, "🌧", "#3ddc84", "Rain total"],
+  [/SNOW|ICE|SLEET|FREEZ/, "❄", "#ffffff", "Snow / ice"],
+  [/TROPICAL/, "🌀", "#ff4fd8", "Storm damage"],
+  [/./, "📍", "#8ea3ba", null],
+];
+function lsrKind(p){ for(const row of LSR_KIND){ if(row[0].test(p.type || "") || row[0].test(p.typetext || "")) return row; } return LSR_KIND[LSR_KIND.length - 1]; }
+function lsrSrc(x){
+  const t = titleCase(String(x || "unknown")).replace(/\bMngr\b/,"Manager").replace(/\bHig$/,"Highways").replace(/\bR$/,"Rescue");
+  return t.replace(/\b(Asos|Awos|Nws|Ncdot|Dot|Cocorahs|Mping|Wfo)\b/g, w => ({Cocorahs:"CoCoRaHS", Mping:"mPING"})[w] || w.toUpperCase());
+}
+function agoTxt(t){ const m = Math.round((Date.now() - t) / 60000); return m < 60 ? Math.max(m, 1) + " min ago" : m < 48*60 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " d ago"; }
+function lsrMag(p){ if(p.magnitude === "" || p.magnitude == null) return ""; const u = (p.unit || "").toLowerCase(); return ` · ${p.magnitude}${u === "inch" ? " in" : u === "mph" ? " mph" : u ? " " + u : ""}`; }
+S.lsr = [];
+async function refreshLsr(){
+  const h = S.home, dLat = LSR_MI/69, dLon = LSR_MI/(69*Math.cos(rad(h.lat)));
+  const iso = d => d.toISOString().slice(0,16) + "Z";
+  const q = new URLSearchParams({west:(h.lon-dLon).toFixed(2), east:(h.lon+dLon).toFixed(2), south:(h.lat-dLat).toFixed(2), north:(h.lat+dLat).toFixed(2),
+    sts: iso(new Date(Date.now() - LSR_HOURS*3.6e6)), ets: iso(new Date(Date.now() + 5*60000))});
+  let j;
+  try{ j = await getJSON(`${IEM}/geojson/lsr.geojson?${q}`); if(!j || !j.features) throw new Error("bad"); }
+  catch(e){ setStatus("storm reports", false); if(!S.lsr.length){ const b = $("lsr"); b.textContent = ""; b.append(el("div","empty","Storm reports unavailable right now.")); } return; }
+  const seen = new Set(), out = [];
+  for(const f of j.features){
+    const p = f.properties || {}, lat = num(p.lat), lon = num(p.lon);
+    if(lat == null || lon == null) continue;
+    const key = [p.valid, p.lat, p.lon, p.typetext].join("|"); if(seen.has(key)) continue; seen.add(key);
+    const xy = toXY(lat, lon), d = Math.hypot(...xy);
+    if(mi(d) > LSR_MI) continue;
+    out.push({p, lat, lon, d, t: new Date(p.valid).getTime(), bearing: deg(Math.atan2(xy[0], xy[1])), kind: lsrKind(p)});
+  }
+  out.sort((a, b) => b.t - a.t);
+  S.lsr = out;
+  drawLsr(); renderLsr();
+  setStatus("storm reports", true);
+}
+function lsrPopup(r){
+  const p = r.p, k = r.kind;
+  return `<b style="font-size:17px">${k[1]} ${esc(k[3] || titleCase(p.typetext || ""))}${esc(lsrMag(p))}</b><br>${esc(agoTxt(r.t))} · ${esc(fmtT(new Date(r.t)))}<br><b>${esc(titleCase(p.city || ""))}</b>${p.county ? ", " + esc(titleCase(p.county)) + " Co." : ""}<br>${esc(p.remark || "")}<br><small>Reported by: ${esc(lsrSrc(p.source))}</small>`;
+}
+function drawLsr(){
+  lyr.lsr.clearLayers();
+  for(const r of S.lsr.slice().reverse()){
+    const old = Date.now() - r.t > 12*3.6e6;
+    L.marker([r.lat, r.lon], {zIndexOffset: old ? 300 : 450, icon: L.divIcon({className:"", iconSize:[26,26], iconAnchor:[13,13],
+      html:`<div class="lsrmk${old ? " old" : ""}" style="background:${r.kind[2]}">${r.kind[1]}</div>`})}).bindPopup(lsrPopup(r)).addTo(lyr.lsr);
+  }
+}
+let lsrAll = false;
+function renderLsr(){
+  const box = $("lsr"); box.textContent = "";
+  const list = S.lsr;
+  $("lsrMeta").textContent = `${list.length} in ${LSR_HOURS} h · ${LSR_MI} mi`;
+  if(!list.length){ box.append(el("div","empty",`No storm reports within ${LSR_MI} miles in the last ${LSR_HOURS} hours.`)); return; }
+  for(const r of list.slice(0, lsrAll ? 60 : 6)){
+    const p = r.p, c = el("div","card lsr"); c.style.setProperty("--c", r.kind[2]);
+    const body = el("div","lbody");
+    const hd = el("div","lhead"); hd.append(el("b",null,(r.kind[3] || titleCase(p.typetext || "")) + lsrMag(p)), el("span",null,agoTxt(r.t)));
+    body.append(hd, el("div","lwhere",`${titleCase(p.city || "")}${p.county ? ", " + titleCase(p.county) + " Co." : ""} · ${fmtMi(r.d)} mi ${compass(r.bearing)}`));
+    if(p.remark) body.append(el("div","lrem",p.remark));
+    body.append(el("div","lsrc","Reported by " + lsrSrc(p.source)));
+    c.append(el("div","lic",r.kind[1]), body);
+    c.onclick = () => { if(!S.layers.lsr){ S.layers.lsr = true; applyLayers(); } showTab("radar");
+      setTimeout(() => { map.flyTo([r.lat, r.lon], 11); setTimeout(() => L.popup().setLatLng([r.lat, r.lon]).setContent(lsrPopup(r)).openOn(map), 900); }, 60); };
+    box.append(c);
+  }
+  if(list.length > 6){ const b = el("button","chip lsrmore", lsrAll ? "Show fewer" : `Show all ${Math.min(list.length, 60)} reports`); b.onclick = () => { lsrAll = !lsrAll; renderLsr(); }; box.append(b); }
+}
+
+/* ---------- live coverage (YouTube stream + live chat) ----------
+   Which stream to show lives in live.json next to the app, so it can be switched from GitHub without an app update. */
+const LIVE_DEFAULT = {name:"Carolina Weather Group", channel:"UCmhGiYbMDccQcdSjpf87nGg", handle:"@carolinaweathergroup", video:"F0GQWljh9hI", title:""};
+let LIVE = Object.assign({}, LIVE_DEFAULT), liveOn = false;
+async function loadLive(){
+  try{
+    const r = await fetch("live.json?t=" + Date.now(), {cache:"no-store"});
+    if(r.ok){ const j = await r.json(); if(j && (j.video || j.channel)) LIVE = Object.assign({}, LIVE_DEFAULT, j); }
+  }catch(e){}
+  tileNote("live", LIVE.name + " · stream & live chat");
+  if(currentTab === "live") liveShow(true);
+}
+function liveShow(force){
+  if(liveOn && !force) return;
+  liveOn = true;
+  const vid = $("liveVid"), chat = $("liveChat"), links = $("liveLinks");
+  vid.textContent = ""; chat.textContent = ""; links.textContent = "";
+  $("liveWho").textContent = LIVE.name;
+  $("liveTitle").textContent = LIVE.title || "";
+  if(!navigator.onLine){ vid.append(el("div","empty","You're offline. Live coverage needs a connection.")); return; }
+  const v = encodeURIComponent(LIVE.video || "");
+  const f = el("iframe");
+  f.src = LIVE.video ? `https://www.youtube.com/embed/${v}?playsinline=1&rel=0` : `https://www.youtube.com/embed/live_stream?channel=${encodeURIComponent(LIVE.channel)}&playsinline=1`;
+  f.title = LIVE.name + " live stream"; f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen = true;
+  f.referrerPolicy = "strict-origin-when-cross-origin";
+  vid.append(f);
+  if(LIVE.video && location.hostname){
+    const c = el("iframe");
+    c.src = `https://www.youtube.com/live_chat?v=${v}&embed_domain=${encodeURIComponent(location.hostname)}`;
+    c.title = LIVE.name + " live chat";
+    chat.append(c);
+  } else chat.append(el("div","empty","Live chat appears here while a stream is on."));
+  const mk = (label, url, primary) => { const a = el("a","btnlink" + (primary ? " primary" : ""), label); a.href = url; a.target = "_blank"; a.rel = "noopener"; return a; };
+  if(LIVE.video) links.append(mk("💬 Chat in YouTube ↗", `https://www.youtube.com/live/${v}`, true));
+  links.append(mk("📺 What's live now ↗", LIVE.handle ? `https://www.youtube.com/${LIVE.handle}/live` : `https://www.youtube.com/channel/${LIVE.channel}/live`));
+}
+function liveHide(){ if(!liveOn) return; liveOn = false; $("liveVid").textContent = ""; $("liveChat").textContent = ""; }   // stops the audio when you leave the page
+loadLive();
+
 /* ---------- local webcams ----------
    Still pictures that refresh while the Cams page is open (only the tiles on screen, to save data).
    Cameras belong to their owners: every one is credited and links back to its source. */
@@ -2316,7 +2477,7 @@ $("camClose").onclick = closeCam;
 
 /* ---------- tabs ---------- */
 var MAIN_TABS = ["radar","forecast","alerts","cams","more"];
-var SUB_TABS = ["ready","power","roads","news","settings"];   // live inside More
+var SUB_TABS = ["ready","live","power","roads","news","settings"];   // live inside More
 var TABS = MAIN_TABS.concat(SUB_TABS);
 let currentTab = "radar";
 function showTab(v){
@@ -2329,6 +2490,7 @@ function showTab(v){
   if(v === "radar") setTimeout(() => map.invalidateSize(), 30);
   if(v !== "radar"){ toggleLayers(false); toggleTools(false); }
   if(v === "cams") camsShown();
+  if(v === "live") liveShow(); else liveHide();
   try{ history.replaceState(null, "", v === "radar" ? location.pathname + location.search : "#" + v); }catch(e){}
 }
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => { if(t.dataset.v === currentTab) $("v-"+currentTab).scrollTo({top:0, behavior:"smooth"}); else showTab(t.dataset.v); });
@@ -2411,7 +2573,7 @@ window.addEventListener("online", () => { $("bHead").textContent = "Back online"
 })();
 
 /* ---------- schedule ---------- */
-function refreshAll(){ refreshRadar(); refreshCells(); refreshAlerts(); refreshForecast(); refreshRiver(); refreshTropical(); refreshRoads(); }
+function refreshAll(){ refreshRadar(); refreshCells(); refreshAlerts(); refreshForecast(); refreshRiver(); refreshTropical(); refreshRoads(); refreshLsr(); }
 drawHome(); toggleLayers(false); applyLayers(); showFrame(frame); setPlaying(true); refreshAll();
 if(!navigator.onLine) showOffline();
 showTab(location.hash.slice(1) || "radar");
@@ -2422,6 +2584,8 @@ setInterval(refreshForecast, 30*60000);
 setInterval(refreshRiver, 15*60000);
 setInterval(refreshTropical, 15*60000);
 setInterval(refreshRoads, 5*60000);
+setInterval(refreshLsr, 5*60000);
+setInterval(() => { if(currentTab === "alerts" && S.lsr.length) renderLsr(); }, 60000);  // keep "x min ago" honest
 setInterval(() => { renderStatus(); renderThreats(); }, 30000);  // keep ETAs ticking between fetches
 </script>
 </body>
