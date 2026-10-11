@@ -1,0 +1,24 @@
+{
+  "name": "Storm Watch",
+  "short_name": "Storm Watch",
+  "description": "Live radar, storm paths, forecast, alerts, power outages and road closures for Western North Carolina.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a0e13",
+  "theme_color": "#0a0e13",
+  "categories": ["weather", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Forecast", "url": "./#forecast", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Alerts", "url": "./#alerts", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Power outages", "url": "./#power", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Roads", "url": "./#roads", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

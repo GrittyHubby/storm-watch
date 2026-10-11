@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0e13">
+<meta name="description" content="Live radar, storm paths, forecast, alerts, power outages and road closures for Western North Carolina.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Storm Watch">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Storm Watch</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +31,7 @@
 html,body{height:100%;margin:0;overflow:hidden}
 body{background:var(--bg);color:var(--fg);font:16px/1.45 var(--display);-webkit-font-smoothing:antialiased;padding-top:env(safe-area-inset-top,0px)}
 button{font:inherit;color:inherit}
-.app{display:flex;flex-direction:column;height:100%;height:100dvh}
+.app{display:flex;flex-direction:column;height:calc(100% - env(safe-area-inset-top,0px));height:calc(100dvh - env(safe-area-inset-top,0px))}
 .mapcol{display:flex;flex-direction:column;min-width:0}
 
 /* Banner */
@@ -205,6 +213,8 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
 
 /* Footer controls */
 .ctrls{display:flex;flex-wrap:wrap;gap:8px}
+.install{margin-top:12px}
+.install .chip{justify-self:start;margin-top:6px}
 .pwlist{display:grid;gap:8px;margin-top:8px}
 .dukewrap{position:relative;height:min(68vh,560px);border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
 .dukewrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
@@ -390,6 +400,11 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
             <button class="chip" id="btnWake">☀ Keep screen on: off</button>
             <button class="chip" id="btnRefresh">↻ Refresh now</button>
           </div>
+          <div class="card install" id="installBox" style="--c:var(--accent)" hidden>
+            <div class="mid">Put Storm Watch on your home screen</div>
+            <div class="sub" id="installText">Opens full screen from its own icon, like a regular app.</div>
+            <button class="chip on" id="btnInstall" hidden>📲 Install Storm Watch</button>
+          </div>
         </section>
         <section class="sec">
           <h2>Data feeds</h2>
@@ -460,6 +475,27 @@ details .body{white-space:pre-wrap;font-size:15px;line-height:1.5;margin-top:8px
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 "use strict";
+/* ---------- no-map fallback ----------
+   If the map library couldn't load (e.g. opened with no signal before it was ever saved),
+   keep the tabs, phone numbers and safety tips working instead of a dead screen. */
+if(typeof L === "undefined"){
+  const views = ["radar","forecast","alerts","power","roads"];
+  const go = v => { document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.v === v))); views.forEach(id => document.getElementById("v-"+id).hidden = id !== v); };
+  document.querySelectorAll(".tab").forEach(t => t.onclick = () => go(t.dataset.v));
+  const off = !navigator.onLine;
+  document.getElementById("bHead").textContent = off ? "You're offline" : "Map couldn't load";
+  document.getElementById("bSub").textContent = (off ? "Reconnect for live radar, alerts and forecast. " : "Check your connection and reopen. ") + "The Power tab's phone numbers still work.";
+  document.getElementById("banner").style.setProperty("--sev","var(--mute)");
+  window.addEventListener("online", () => location.reload());
+  const pw = document.getElementById("pwList");
+  if(pw) [["French Broad EMC","828-649-2051"],["Haywood EMC","800-951-6088"],["Rutherford EMC","800-521-0920"],["Blue Ridge Energy","800-448-2383"]].forEach(([n,t]) => {
+    const r = document.createElement("div"); r.className = "pwrow";
+    const a = document.createElement("span"); a.className = "pwmap"; a.textContent = n;
+    const c = document.createElement("a"); c.className = "pwtel"; c.href = "tel:"+t.replace(/-/g,""); c.textContent = "📞 "+t;
+    r.append(a, c); pw.append(r);
+  });
+  throw new Error("Map library unavailable; running in no-map mode");
+}
 /* ---------- constants ---------- */
 const DEFAULT_HOME = {lat:35.5951, lon:-82.5515, name:"Asheville"};
 const THREAT_KM = 8;          // "hits you" radius ≈ 5 mi
@@ -1452,9 +1488,46 @@ const UTILITIES = [
   }
 })();
 
+/* ---------- offline ---------- */
+function showOffline(){
+  const bn = $("banner"); bn.style.setProperty("--sev","var(--mute)"); bn.classList.remove("pulse");
+  $("bHead").textContent = "You're offline";
+  $("bSub").textContent = "Reconnect to load live radar, alerts and forecast. Phone calls to 911 and your utility still work.";
+}
+window.addEventListener("offline", showOffline);
+window.addEventListener("online", () => { $("bHead").textContent = "Back online"; $("bSub").textContent = "Refreshing…"; refreshAll(); });
+
+/* ---------- install as an app ---------- */
+(function(){
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  if("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")){
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+  if(standalone) return;
+  const box = $("installBox"), btn = $("btnInstall"), txt = $("installText");
+  let deferred = null;
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault(); deferred = e;
+    box.hidden = false; btn.hidden = false;
+  });
+  btn.onclick = async () => {
+    if(!deferred) return;
+    deferred.prompt();
+    try{ const r = await deferred.userChoice; if(r.outcome === "accepted") box.hidden = true; }catch(e){}
+    deferred = null; btn.hidden = true;
+  };
+  window.addEventListener("appinstalled", () => { box.hidden = true; });
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if(ios){
+    box.hidden = false;
+    txt.textContent = "On iPhone or iPad: open this page in Safari, tap the Share button (square with an arrow), then \"Add to Home Screen.\"";
+  }
+})();
+
 /* ---------- schedule ---------- */
 function refreshAll(){ refreshRadar(); refreshCells(); refreshAlerts(); refreshForecast(); refreshRiver(); refreshTropical(); refreshRoads(); }
 drawHome(); toggleLayers(false); applyLayers(); showFrame(frame); setPlaying(true); refreshAll();
+if(!navigator.onLine) showOffline();
 showTab(location.hash.slice(1) || "radar");
 setInterval(refreshRadar, 2.5*60000);
 setInterval(refreshCells, 2*60000);
