@@ -2296,7 +2296,7 @@ function liveShow(force){
   vid.append(f);
   if(LIVE.video && location.hostname){
     const c = el("iframe");
-    c.src = `https://www.youtube.com/live_chat?v=${v}&embed_domain=${encodeURIComponent(location.hostname)}`;
+    c.src = `https://www.youtube.com/live_chat?v=${v}&dark_theme=1&embed_domain=${encodeURIComponent(location.hostname)}`;
     c.title = LIVE.name + " live chat";
     chat.append(c);
   } else chat.append(el("div","empty","Live chat appears here while a stream is on."));
